@@ -40,27 +40,26 @@ main（小光，编排中心）
 
 ### Workspace 架构
 
-**单一 Workspace 原则**：
-- `~/.openclaw/workspace/` - 唯一的工作区，所有 agent 共享
-- 所有 agent 在同一个 workspace 中工作，通过子目录组织文件
+**Agent 工作目录**：
+- `~/.openclaw/agents/wemedia/workspace/` - 内容创作产物
+  - `drafts/` - 内容草稿
+  - `platforms/` - 各平台版本
+  - `content-calendar/` - 内容排期
+- `~/.openclaw/agents/gemini/workspace/reports/` - 分析报告
+- `~/.openclaw/agents/{agent}/workspace/` - 各 agent 的工作产物
 
-**目录结构**：
-- `workspace/shared-context/` - 跨 agent 共享上下文 (THESIS.md, FEEDBACK-LOG.md, SIGNALS.md)
-- `workspace/intel/` - Agent 协作文件（单写者原则，多读者）
-- `workspace/drafts/` - 内容草稿
-- `workspace/platforms/` - 各平台版本
-- `workspace/content-calendar/` - 内容排期
-- `workspace/cache/` - 调研结果、平台模板缓存
+**共享 Workspace**：
+- `~/.openclaw/workspace/` - Main agent 和跨 agent 协作
+- `workspace/intel/` - Agent 协作文件（单写者原则）
+- `workspace/shared-context/` - 跨 agent 共享上下文
+  - THESIS.md, FEEDBACK-LOG.md, SIGNALS.md
 - `workspace/memory/` - 记忆文件
-- `workspace/*.json` - 历史记录 (cost-tracking.json)
-
-**Agent 配置**：
-- `~/.openclaw/agents/{agent}/` - 每个 agent 的配置文件 (AGENTS.md, SOUL.md, IDENTITY.md)
+- `workspace/*.json` - 历史记录
 
 **文件传递规则**：
-- Sub-agent 在共享 workspace 中工作
-- 产出文件保存到相应子目录（drafts/, platforms/, cache/ 等）
-- 跨 agent 协作通过 intel/ 目录（单写者原则）
+- 每个 agent 在自己的 workspace 中生成工作产物
+- 通过 intel/ 目录传递摘要或索引（单写者原则）
+- Main agent 或其他 agent 直接读取 agent workspace 获取完整产物
 
 ## Agent Roles
 
