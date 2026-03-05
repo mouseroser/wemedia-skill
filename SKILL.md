@@ -41,12 +41,12 @@ main（小光，编排中心）
 ### Workspace 架构
 
 **Agent 工作目录**：
-- `~/.openclaw/agents/wemedia/workspace/` - 内容创作产物
+- `~/.openclaw/agents/wemedia/` - 内容创作产物
   - `drafts/` - 内容草稿
   - `platforms/` - 各平台版本
   - `content-calendar/` - 内容排期
-- `~/.openclaw/agents/gemini/workspace/reports/` - 分析报告
-- `~/.openclaw/agents/{agent}/workspace/` - 各 agent 的工作产物
+- `~/.openclaw/agents/gemini/reports/` - 分析报告
+- `~/.openclaw/agents/{agent}/` - 各 agent 的工作产物直接放在 agent 目录下
 
 **共享 Workspace**：
 - `~/.openclaw/workspace/` - Main agent 和跨 agent 协作
@@ -57,9 +57,9 @@ main（小光，编排中心）
 - `workspace/*.json` - 历史记录
 
 **文件传递规则**：
-- 每个 agent 在自己的 workspace 中生成工作产物
+- 每个 agent 在自己的目录中生成工作产物
 - 通过 intel/ 目录传递摘要或索引（单写者原则）
-- Main agent 或其他 agent 直接读取 agent workspace 获取完整产物
+- Main agent 或其他 agent 直接读取 agent 目录获取完整产物
 
 ## Agent Roles
 
