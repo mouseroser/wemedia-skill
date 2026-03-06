@@ -40,26 +40,29 @@ main（小光，编排中心）
 
 ### Workspace 架构
 
-**Agent 工作目录**：
-- `~/.openclaw/agents/wemedia/` - 内容创作产物
-  - `drafts/` - 内容草稿
-  - `platforms/` - 各平台版本
-  - `content-calendar/` - 内容排期
-- `~/.openclaw/agents/gemini/reports/` - 分析报告
-- `~/.openclaw/agents/{agent}/` - 各 agent 的工作产物直接放在 agent 目录下
-
-**共享 Workspace**：
-- `~/.openclaw/workspace/` - Main agent 和跨 agent 协作
+**Main Agent 工作目录**：
+- `~/.openclaw/workspace/` - Main agent (小光) 的工作目录
 - `workspace/intel/` - Agent 协作文件（单写者原则）
 - `workspace/shared-context/` - 跨 agent 共享上下文
   - THESIS.md, FEEDBACK-LOG.md, SIGNALS.md
 - `workspace/memory/` - 记忆文件
 - `workspace/*.json` - 历史记录
 
+**Sub-Agent 工作目录**：
+- `~/.openclaw/workspace/agents/wemedia/` - 内容创作产物
+  - `drafts/` - 内容草稿
+  - `platforms/` - 各平台版本
+  - `content-calendar/` - 内容排期
+- `~/.openclaw/workspace/agents/gemini/` - 分析报告
+  - `reports/` - 研究报告
+- `~/.openclaw/workspace/agents/nano-banana/` - 生图产物
+- `~/.openclaw/workspace/agents/notebooklm/` - NotebookLM 产物
+- `~/.openclaw/workspace/agents/{agent}/` - 各 agent 的工作产物
+
 **文件传递规则**：
-- 每个 agent 在自己的目录中生成工作产物
-- 通过 intel/ 目录传递摘要或索引（单写者原则）
-- Main agent 或其他 agent 直接读取 agent 目录获取完整产物
+- 每个 agent 在自己的 workspace 目录中生成工作产物
+- 通过 `~/.openclaw/workspace/intel/` 目录传递摘要或索引（单写者原则）
+- Main agent 或其他 agent 直接读取对应 agent 的 workspace 目录获取完整产物
 
 ## Agent Roles
 
