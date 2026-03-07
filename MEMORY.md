@@ -282,7 +282,18 @@
 ### memory_search 不可用（embeddings API key invalid）
 - memory_search 工具报 gemini embeddings 400 API_KEY_INVALID（来自 Google generativelanguage）
 - 影响：无法自动检索 MEMORY.md / memory/*.md，只能手动 read
-- 修复：检查 embeddings provider 的配置与密钥，或切换到可用的 embeddings provider
+- 根因复盘（2026-03-07）：
+  - `memorySearch.provider = "gemini"` 这条 embeddings 链不可用
+  - 当前聊天代理也不支持 `/embeddings`
+  - 即使切换到可用 embeddings provider，仍需显式执行一次 `openclaw memory index --force --agent main` 才会把已扫描到的 memory 文件真正写入索引
+- 最终修复（2026-03-07）：
+  - 将 `agents.defaults.memorySearch` 和 `main.memorySearch` 切到 `provider: "ollama"`
+  - `model: "nomic-embed-text"`
+  - `remote.baseUrl: "http://127.0.0.1:11434"`
+  - `remote.apiKey: "ollama-local"`
+  - 拉取本地模型：`ollama pull nomic-embed-text`
+  - 强制重建索引：`openclaw memory index --force --agent main`
+- 修复后状态：`memory_search` 恢复为 `provider: "ollama"`, `mode: "hybrid"`
 
 ## 踩坑笔记（续）
 
