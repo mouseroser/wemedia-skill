@@ -310,6 +310,7 @@
 - 第三轮原子记忆补全（2026-03-07）：已补“生产 `openclaw.json` 默认不推 GitHub，只在需要时生成脱敏模板”“遇到 OpenClaw 配置问题先查 `openclaw-docs`”“当前主记忆插件是 `memory-lancedb-pro + Ollama + nomic-embed-text`”“memory-lancedb-pro 当前处于 P1 状态”“聊天高频问题要补短句型原子记忆”等运行期元规则
 - 状态快照（2026-03-07）：已整理 `reports/memory-system-status-2026-03-07.md`，记录当前插件配置、运行路径、备份文件、相关提交、已知边界和后续建议；当前建议进入自然使用观察期，按真实漏召回再补原子记忆
 - 观察期检查单（2026-03-07）：已整理 `reports/memory-observation-checklist-2026-03-07.md`，后续以“真实漏召回 + 高影响/高频”作为是否补原子记忆的判断标准，避免盲目加记忆
+- 回滚手册（2026-03-07）：已整理 `reports/memory-rollback-runbook-2026-03-07.md`，明确两级回滚路径：一条回到最小插件部署态，一条回到仅使用内置 `memory_search` 的状态；优先回滚配置，不要先删数据库和运行目录
 
 ## 踩坑笔记（续）
 
