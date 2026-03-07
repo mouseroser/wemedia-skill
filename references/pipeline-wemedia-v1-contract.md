@@ -1,5 +1,7 @@
 # 自媒体内容流水线 v1.0 Contract
 
+> DEPRECATED: 此文件已被 `pipeline-wemedia-v1.1-contract.md` 取代，不再作为默认执行入口；仅保留作回看/回滚参考。
+
 Source of truth: `SKILL.md`
 
 ## 1) 全局状态
