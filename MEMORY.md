@@ -302,6 +302,8 @@
 - 最小验收通过：`memory_store` → `memory_recall` → `memory_forget` 整条链路可用，召回模式显示 `vector+BM25`
 - 踩坑：`memory_forget` 删除数据库记录后，不会自动回删 markdown mirror；若做烟雾测试，需手动清理 `memory/YYYY-MM-DD.md` 中的测试行
 - 部署后还需补 `plugins.allow`；否则 OpenClaw 会警告“discovered non-bundled plugins may auto-load”。最终修复：在 `openclaw.json` 中显式允许 `memory-lancedb-pro`、`telegram`、`device-pair`、`phone-control`、`talk-voice`、`acpx`
+- P1 开启结果（2026-03-07）：`autoRecall = true`、`autoCapture = true`、`captureAssistant = false`；当前继续保持 `rerank = none`、`enableManagementTools = false`
+- P1 验收结果（2026-03-07）：插件 CLI `memory-pro` 可用；`memory_store -> memory_recall -> memory_forget` 再次验证通过；删除后数据库记录会消失，但 markdown mirror 仍需手动清理
 
 ## 踩坑笔记（续）
 
