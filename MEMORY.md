@@ -311,6 +311,7 @@
 - 状态快照（2026-03-07）：已整理 `reports/memory-system-status-2026-03-07.md`，记录当前插件配置、运行路径、备份文件、相关提交、已知边界和后续建议；当前建议进入自然使用观察期，按真实漏召回再补原子记忆
 - 观察期检查单（2026-03-07）：已整理 `reports/memory-observation-checklist-2026-03-07.md`，后续以“真实漏召回 + 高影响/高频”作为是否补原子记忆的判断标准，避免盲目加记忆
 - 回滚手册（2026-03-07）：已整理 `reports/memory-rollback-runbook-2026-03-07.md`，明确两级回滚路径：一条回到最小插件部署态，一条回到仅使用内置 `memory_search` 的状态；优先回滚配置，不要先删数据库和运行目录
+- 报告索引（2026-03-07）：已整理 `reports/memory-report-index-2026-03-07.md`，把 changelog / status snapshot / observation checklist / rollback runbook 串成一页入口，后续回看不用再翻整段聊天
 
 ## 踩坑笔记（续）
 
