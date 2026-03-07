@@ -1,0 +1,32 @@
+# 方案1摘要：NodeSeek《让你的openclaw不再失忆》
+
+核心思路：
+- 三层物理记忆：
+  - Tier-0：`IDENTITY.md` + `USER.md` + `MEMORY.md`，每次启动必读，Absolute Override
+  - Tier-1：LanceDB Pro 向量数据库，负责长期冷库，支持混合检索 + Rerank
+  - Tier-2：`memory/YYYY-MM-DD.md`，每日流水账，只作为原料，不直接引用
+- 强调“不要把所有记忆堆在一个大 MEMORY.md 里”，否则会膨胀、烧 token、噪音多、旧新知识冲突
+- 推荐使用 `memory-lancedb-pro` 做 Tier-1，理由：
+  - Vector Search（ANN）
+  - BM25 FTS
+  - Hybrid Retrieval / RRF 融合
+  - Cross-Encoder Rerank（Jina/Cohere/SiliconFlow 等）
+  - 新鲜度加权 / 时间衰减 / 长度归一化 / MMR 去重 / Noise Filter
+  - autoRecall / adaptive retrieval
+- 强调“脱水打标法”：
+  - 把长对话浓缩成原子化短结论
+  - 标签建议：`[Fact]`、`[Decision]`、`[Preference]`
+- 强调 Supersede 机制：
+  - 新记忆写入前先检索旧记忆
+  - 如果是升级版，要覆盖或 forget 旧版本，避免僵尸知识和冲突知识
+- 强调人工审核闭环：
+  - 不允许后台无人监督时直接把新记忆写入向量库
+  - 先整理成提案，再由人审核后进入 Tier-1
+- 强调 Tier-0 是唯一真相来源：身份/用户/核心规则不能依赖向量召回
+- 对比观点：
+  - 单 `MEMORY.md`：简单但会膨胀、检索靠 AI 硬读，越用越乱
+  - 原生 LanceDB：有向量搜索，但缺少 BM25 / Rerank / 更细致的后处理
+  - LanceDB Pro + Rerank：检索质量更高，但更复杂，且依赖外部 embedding / rerank 能力
+- 作者总体偏好：
+  - 追求“可控性最高”而非“自动化最高”
+  - 长期记忆宁可多审一步，也不要错误写入污染数据库

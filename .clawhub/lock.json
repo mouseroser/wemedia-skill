@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "skills": {
+    "skill-vetter": {
+      "version": "1.0.0",
+      "installedAt": 1772777960320
+    },
+    "tavily-search": {
+      "version": "1.0.0",
+      "installedAt": 1772778018500
+    }
+  }
+}
