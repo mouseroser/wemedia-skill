@@ -12,6 +12,16 @@ openclaw browser status
 openclaw browser start
 ```
 
+### 本地 rerank sidecar
+检查本地记忆重排服务是否在线：
+```bash
+~/.openclaw/workspace/scripts/status-local-rerank-sidecar.sh
+```
+如果健康检查失败，重新安装并拉起 launchd 服务：
+```bash
+~/.openclaw/workspace/scripts/install-local-rerank-sidecar-launchd.sh
+```
+
 ### 定时任务监控
 检查关键任务的 `lastRunAtMs` 是否超时（>26 小时）：
 ```bash
@@ -45,7 +55,7 @@ openclaw cron trigger <task-id>
 
 **故障模式记录：**
 - 2026-03-05: 添加此文件，基于 Shubham Saboo 的实践经验
-- （待添加：第一次遇到故障后记录在这里）
+- 2026-03-08: 本地 rerank sidecar 首次接入；launchd plist 初版因 `uv` 路径写错启动失败，修正为实际路径后恢复
 
 **原则：**
 - 第一天不需要复杂的监控

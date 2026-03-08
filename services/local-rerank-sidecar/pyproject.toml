@@ -1,0 +1,13 @@
+[project]
+name = "local-rerank-sidecar"
+version = "0.1.0"
+description = "Local Jina-compatible rerank sidecar for OpenClaw memory"
+requires-python = ">=3.11"
+dependencies = [
+  "transformers>=4.49.0",
+  "torch>=2.6.0",
+  "sentencepiece>=0.2.0",
+]
+
+[tool.uv]
+package = false

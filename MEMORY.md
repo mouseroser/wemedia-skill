@@ -312,6 +312,11 @@
 - 观察期检查单（2026-03-07）：已整理 `reports/memory-observation-checklist-2026-03-07.md`，后续以“真实漏召回 + 高影响/高频”作为是否补原子记忆的判断标准，避免盲目加记忆
 - 回滚手册（2026-03-07）：已整理 `reports/memory-rollback-runbook-2026-03-07.md`，明确两级回滚路径：一条回到最小插件部署态，一条回到仅使用内置 `memory_search` 的状态；优先回滚配置，不要先删数据库和运行目录
 - 报告索引（2026-03-07）：已整理 `reports/memory-report-index-2026-03-07.md`，把 changelog / status snapshot / observation checklist / rollback runbook 串成一页入口，后续回看不用再翻整段聊天
+- P2 本地 rerank（2026-03-08）：已新增 `services/local-rerank-sidecar/`，以 `BAAI/bge-reranker-v2-m3` 在本机提供 Jina 兼容 `/v1/rerank`；`memory-lancedb-pro` 已切到 `retrieval.rerank = cross-encoder`、`rerankProvider = jina`、`rerankEndpoint = http://127.0.0.1:8765/v1/rerank`、`rerankModel = BAAI/bge-reranker-v2-m3`
+- 当前长期稳定架构（2026-03-08）：`memory-lancedb-pro` 继续负责检索与融合排序，rerank 通过本地 sidecar 解耦；这样后续可在不改 OpenClaw 配置的前提下替换 sidecar 后端（Transformers / Ollama / 其他本地栈）
+- 自启动状态（2026-03-08）：已通过 `launchd` 安装 `com.openclaw.local-rerank-sidecar`，随登录自动拉起并保持存活；健康检查脚本为 `scripts/status-local-rerank-sidecar.sh`
+- 踩坑（2026-03-08）：launchd plist 初版把 `uv` 写成 `/opt/homebrew/bin/uv` 导致 `EX_CONFIG`；本机实际路径是 `/Users/lucifinil_chen/.local/bin/uv`
+- 验收结果（2026-03-08）：真实 `memory_recall` 结果已出现 `vector+BM25+reranked`，sidecar 日志可见 `POST /v1/rerank`，说明 OpenClaw 已实际走本地 rerank 链路
 
 ## 踩坑笔记（续）
 
