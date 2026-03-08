@@ -1,90 +1,56 @@
 #!/usr/bin/env python3
 import json
 import logging
-import os
 import sys
-from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
-import torch
-
-
-HOST = os.environ.get("LOCAL_RERANK_HOST", "127.0.0.1")
-PORT = int(os.environ.get("LOCAL_RERANK_PORT", "8765"))
-MODEL_NAME = os.environ.get(
-    "LOCAL_RERANK_MODEL", "BAAI/bge-reranker-v2-m3"
+from backends import (
+    OllamaBackend,
+    OllamaSettings,
+    RerankBackend,
+    TransformersBackend,
+    TransformersSettings,
 )
-MAX_LENGTH = int(os.environ.get("LOCAL_RERANK_MAX_LENGTH", "512"))
-LOG_LEVEL = os.environ.get("LOCAL_RERANK_LOG_LEVEL", "INFO").upper()
+from config import load_config
 
 
+CONFIG = load_config()
 logging.basicConfig(
-    level=getattr(logging, LOG_LEVEL, logging.INFO),
+    level=getattr(logging, CONFIG.log_level, logging.INFO),
     format="%(asctime)s %(levelname)s %(message)s",
 )
 logger = logging.getLogger("local-rerank-sidecar")
 
 
-@dataclass
-class AppState:
-    model_name: str
-    device: str
-    tokenizer: Any
-    model: Any
-
-
-def detect_device() -> str:
-    if torch.backends.mps.is_available():
-        return "mps"
-    if torch.cuda.is_available():
-        return "cuda"
-    return "cpu"
-
-
-def load_state() -> AppState:
-    device = detect_device()
-    logger.info("loading reranker model %s on %s", MODEL_NAME, device)
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, trust_remote_code=True)
-    model = AutoModelForSequenceClassification.from_pretrained(
-        MODEL_NAME,
-        trust_remote_code=True,
-    )
-    model.to(device)
-    model.eval()
-    logger.info("reranker model ready")
-    return AppState(
-        model_name=MODEL_NAME,
-        device=device,
-        tokenizer=tokenizer,
-        model=model,
-    )
-
-
-STATE = load_state()
-
-
-def rerank(query: str, documents: list[str]) -> list[float]:
-    pairs = [[query, doc] for doc in documents]
-    with torch.inference_mode():
-        inputs = STATE.tokenizer(
-            pairs,
-            padding=True,
-            truncation=True,
-            max_length=MAX_LENGTH,
-            return_tensors="pt",
+def create_backend() -> RerankBackend:
+    if CONFIG.backend == "transformers":
+        return TransformersBackend(
+            TransformersSettings(
+                model_name=CONFIG.model_name,
+                max_length=CONFIG.max_length,
+            )
         )
-        inputs = {k: v.to(STATE.device) for k, v in inputs.items()}
-        logits = STATE.model(**inputs).logits
-        if logits.ndim > 1:
-            logits = logits[:, 0]
-        scores = torch.sigmoid(logits).detach().cpu().tolist()
-    return [float(score) for score in scores]
+    if CONFIG.backend == "ollama":
+        return OllamaBackend(
+            OllamaSettings(
+                model_name=CONFIG.model_name,
+                base_url=CONFIG.ollama_base_url,
+                timeout_seconds=CONFIG.ollama_timeout_seconds,
+                mode=CONFIG.ollama_mode,
+                keep_alive=CONFIG.ollama_keep_alive,
+            )
+        )
+    raise ValueError(
+        f"unsupported backend: {CONFIG.backend} (expected transformers or ollama)"
+    )
+
+
+BACKEND = create_backend()
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "LocalRerankSidecar/0.1"
+    server_version = "LocalRerankSidecar/0.2"
 
     def _send_json(self, status: int, payload: dict[str, Any]) -> None:
         body = json.dumps(payload).encode("utf-8")
@@ -96,15 +62,12 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         if self.path in ("/health", "/healthz"):
-            self._send_json(
-                200,
-                {
-                    "ok": True,
-                    "model": STATE.model_name,
-                    "device": STATE.device,
-                    "port": PORT,
-                },
-            )
+            payload = {
+                "ok": True,
+                "port": CONFIG.port,
+                **BACKEND.health_payload(),
+            }
+            self._send_json(200, payload)
             return
         self._send_json(404, {"error": "not_found"})
 
@@ -143,7 +106,7 @@ class Handler(BaseHTTPRequestHandler):
             top_n = len(normalized_docs)
 
         try:
-            scores = rerank(query, normalized_docs)
+            scores = BACKEND.rerank(query, normalized_docs)
         except Exception as exc:
             logger.exception("rerank failed")
             self._send_json(500, {"error": "rerank_failed", "detail": str(exc)})
@@ -153,7 +116,7 @@ class Handler(BaseHTTPRequestHandler):
             [
                 {
                     "index": idx,
-                    "relevance_score": score,
+                    "relevance_score": float(score),
                 }
                 for idx, score in enumerate(scores)
             ],
@@ -164,7 +127,8 @@ class Handler(BaseHTTPRequestHandler):
         self._send_json(
             200,
             {
-                "model": payload.get("model") or STATE.model_name,
+                "backend": BACKEND.name,
+                "model": payload.get("model") or BACKEND.model_name,
                 "results": ranked,
             },
         )
@@ -174,8 +138,14 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    logger.info("starting local rerank sidecar on %s:%s", HOST, PORT)
-    server = ThreadingHTTPServer((HOST, PORT), Handler)
+    logger.info(
+        "starting local rerank sidecar on %s:%s with backend=%s model=%s",
+        CONFIG.host,
+        CONFIG.port,
+        BACKEND.name,
+        BACKEND.model_name,
+    )
+    server = ThreadingHTTPServer((CONFIG.host, CONFIG.port), Handler)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

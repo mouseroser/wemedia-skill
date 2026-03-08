@@ -6,17 +6,38 @@ A local Jina-compatible rerank service for `memory-lancedb-pro`.
 
 - Keeps `memory-lancedb-pro` unchanged
 - Exposes `POST /v1/rerank` in the format the plugin already understands
-- Runs a local multilingual cross-encoder model by default: `BAAI/bge-reranker-v2-m3`
+- Decouples the OpenClaw-facing API from the local inference backend
 - Lets the backend evolve later without changing OpenClaw config
 
-## Endpoints
+## Fixed external interface
 
 - `GET /health`
 - `POST /v1/rerank`
 
-## Default model
+OpenClaw always talks to the same sidecar endpoint. Backends can change underneath it.
 
-- `BAAI/bge-reranker-v2-m3`
+## Backends
+
+### `transformers` (default, stable)
+
+- Local cross-encoder via Hugging Face Transformers
+- Default model: `BAAI/bge-reranker-v2-m3`
+- Best current production choice on this machine
+
+### `ollama` (optional backend)
+
+- Keeps the same sidecar interface while moving inference behind Ollama
+- Modes:
+  - `generate` - use a local Ollama text model to emit JSON relevance scores
+  - `embeddings` - fallback mode that ranks by Ollama embeddings cosine similarity
+- This is intentionally behind the sidecar so Ollama is only one backend, not the public contract
+
+## Key environment variables
+
+- `LOCAL_RERANK_BACKEND=transformers|ollama`
+- `LOCAL_RERANK_MODEL=...`
+- `LOCAL_RERANK_OLLAMA_BASE_URL=http://127.0.0.1:11434`
+- `LOCAL_RERANK_OLLAMA_MODE=generate|embeddings`
 
 ## Scripts
 
@@ -28,6 +49,6 @@ A local Jina-compatible rerank service for `memory-lancedb-pro`.
 
 ## Notes
 
-- The first startup downloads model weights locally, so it can take a while.
-- Current backend uses local Transformers on this machine.
-- If Ollama gains a stable rerank API later, the sidecar can switch backends without changing `memory-lancedb-pro`.
+- The first `transformers` startup downloads model weights locally, so it can take a while.
+- Current production default remains `transformers` for stability.
+- The `ollama` backend exists so the interface is future-proof; you can experiment with it later without touching OpenClaw config.

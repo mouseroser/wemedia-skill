@@ -317,6 +317,7 @@
 - 自启动状态（2026-03-08）：已通过 `launchd` 安装 `com.openclaw.local-rerank-sidecar`，随登录自动拉起并保持存活；健康检查脚本为 `scripts/status-local-rerank-sidecar.sh`
 - 踩坑（2026-03-08）：launchd plist 初版把 `uv` 写成 `/opt/homebrew/bin/uv` 导致 `EX_CONFIG`；本机实际路径是 `/Users/lucifinil_chen/.local/bin/uv`
 - 验收结果（2026-03-08）：真实 `memory_recall` 结果已出现 `vector+BM25+reranked`，sidecar 日志可见 `POST /v1/rerank`，说明 OpenClaw 已实际走本地 rerank 链路
+- P2.1 backend 解耦（2026-03-08）：sidecar 已升级为“固定接口 + 可插拔 backend”；当前生产默认仍是 `transformers`，同时已补 `ollama` backend 入口，支持 `generate` 与 `embeddings` 两种模式；已用 `nomic-embed-text` 在临时端口验证 `ollama + embeddings` 模式可用
 
 ## 踩坑笔记（续）
 
