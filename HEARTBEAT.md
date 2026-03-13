@@ -15,11 +15,11 @@ openclaw browser start
 ### 本地 rerank sidecar
 检查本地记忆重排服务是否在线：
 ```bash
-~/.openclaw/workspace/scripts/status-local-rerank-sidecar.sh
+curl -s http://127.0.0.1:8765/health
 ```
-如果健康检查失败，重新安装并拉起 launchd 服务：
+如果健康检查失败，检查 launchd 服务状态：
 ```bash
-~/.openclaw/workspace/scripts/install-local-rerank-sidecar-launchd.sh
+launchctl list | grep rerank
 ```
 
 ### 定时任务监控
@@ -50,6 +50,28 @@ openclaw cron trigger <task-id>
 - `shared-context/` (THESIS.md, FEEDBACK-LOG.md, SIGNALS.md)
 - `intel/` (agent 协作文件)
 - `memory/` (每日日志)
+
+### TODO 跟进
+检查 `todo/` 目录下的活跃任务：
+```bash
+find todo/ -name "*.md" -mtime -7 -type f
+```
+
+**检查规则**：
+- 如果有标记为"立即执行（今天）"且未完成的项 → 提醒晨星
+- 如果有"本周执行"项接近周末且未完成 → 提醒晨星
+- 如果有"观察期"任务需要验证 → 提醒晨星
+
+**报告格式**（简洁）：
+```
+📋 TODO 提醒：<任务名>
+⏰ Deadline: <时间>
+📊 当前状态: <简述>
+```
+
+**原则**：
+- 只在需要时提醒，不产生噪音
+- 如果所有 TODO 都在正常推进，回复 HEARTBEAT_OK
 
 ---
 
