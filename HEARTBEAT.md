@@ -52,9 +52,9 @@ openclaw cron trigger <task-id>
 - `memory/` (每日日志)
 
 ### TODO 跟进
-检查 `todo/` 目录下的活跃任务：
+检查 `~/.openclaw/todo/` 目录下的活跃任务：
 ```bash
-find todo/ -name "*.md" -mtime -7 -type f
+find ~/.openclaw/todo/ -name "*.md" -mtime -7 -type f
 ```
 
 **检查规则**：
@@ -68,6 +68,12 @@ find todo/ -name "*.md" -mtime -7 -type f
 ⏰ Deadline: <时间>
 📊 当前状态: <简述>
 ```
+
+**同步机制**：
+- 主执行计划：`~/.openclaw/todo/master-execution-plan.md`（统一视图）
+- 原 TODO 文件：保持实时同步更新
+- **完成任务时**：同时更新主计划和原文件的 `[ ]` → `[x]`
+- **原则**：双向同步，确保一致性
 
 **原则**：
 - 只在需要时提醒，不产生噪音
