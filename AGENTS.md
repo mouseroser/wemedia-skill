@@ -110,6 +110,7 @@ sessions_spawn(
   - main 发往监控群 / 晨星 DM = 可靠主链路
   - agent 自己的职能群通知 = best-effort 辅链路
   - Step 7 由 main 统一推送到监控群 + 晨星 DM (target:1099011886)
+- **全局约定（2026-03-13 起生效）**：以后所有流水线与多智能体编排通知，都按“main 可靠主链路 + agent best-effort 辅链路”执行，不再把 agent 自推视为完成通知的可靠依据。
 
 ### Type A/B 动态模型切换
 - **Type A (业务/架构)**: coding(sonnet/medium) + review(gpt/high) + test(gpt/medium)
