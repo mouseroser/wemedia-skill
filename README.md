@@ -52,6 +52,12 @@ Step 7  晨星确认 → 交付
 - 内容审查 REJECT → HALT，通知晨星
 - 所有步骤超时 10 分钟 → HALT
 
+## 最近更新（2026-03-13）
+
+- 明确采用 **main-first** 通知模型
+- 子 agent 的 Telegram 推送仅视为 **best-effort**
+- 关键进度、结果、失败与告警由 `main` 统一保证可见性
+
 ## 依赖
 
 - [星链 StarChain](https://github.com/mouseroser/starchain-pipeline) v1.8 编排框架
