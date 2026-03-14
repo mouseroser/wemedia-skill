@@ -8,6 +8,26 @@
     "tavily-search": {
       "version": "1.0.0",
       "installedAt": 1772778018500
+    },
+    "agent-browser": {
+      "version": "0.2.0",
+      "installedAt": 1773161704237
+    },
+    "find-skills": {
+      "version": "0.1.0",
+      "installedAt": 1773161767102
+    },
+    "self-improving-agent": {
+      "version": "3.0.0",
+      "installedAt": 1773161837901
+    },
+    "proactive-agent": {
+      "version": "3.1.0",
+      "installedAt": 1773161886523
+    },
+    "weather": {
+      "version": "1.0.0",
+      "installedAt": 1773211622322
     }
   }
 }

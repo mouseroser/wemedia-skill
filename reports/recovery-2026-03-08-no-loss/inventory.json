@@ -1,0 +1,100 @@
+[
+  {
+    "path": "/Users/lucifinil_chen/.openclaw/workspace/agents/brainstorming/AGENTS.md",
+    "exists": true,
+    "sources": [
+      "/Users/lucifinil_chen/.openclaw/agents/main/sessions/d4bb1fb4-fea8-4bf4-8829-0c01124dab0a.jsonl.reset.2026-03-08T10-24-10.873Z"
+    ]
+  },
+  {
+    "path": "/Users/lucifinil_chen/.openclaw/workspace/agents/claude/AGENTS.md",
+    "exists": true,
+    "sources": [
+      "/Users/lucifinil_chen/.openclaw/agents/main/sessions/d4bb1fb4-fea8-4bf4-8829-0c01124dab0a.jsonl.reset.2026-03-08T10-24-10.873Z"
+    ]
+  },
+  {
+    "path": "/Users/lucifinil_chen/.openclaw/workspace/agents/claude/SOUL.md",
+    "exists": true,
+    "sources": [
+      "/Users/lucifinil_chen/.openclaw/agents/main/sessions/d4bb1fb4-fea8-4bf4-8829-0c01124dab0a.jsonl.reset.2026-03-08T10-24-10.873Z"
+    ]
+  },
+  {
+    "path": "/Users/lucifinil_chen/.openclaw/workspace/agents/coding/AGENTS.md",
+    "exists": true,
+    "sources": [
+      "/Users/lucifinil_chen/.openclaw/agents/main/sessions/d4bb1fb4-fea8-4bf4-8829-0c01124dab0a.jsonl.reset.2026-03-08T10-24-10.873Z"
+    ]
+  },
+  {
+    "path": "/Users/lucifinil_chen/.openclaw/workspace/agents/gemini/AGENTS.md",
+    "exists": true,
+    "sources": [
+      "/Users/lucifinil_chen/.openclaw/agents/main/sessions/d4bb1fb4-fea8-4bf4-8829-0c01124dab0a.jsonl.reset.2026-03-08T10-24-10.873Z"
+    ]
+  },
+  {
+    "path": "/Users/lucifinil_chen/.openclaw/workspace/agents/gemini/SOUL.md",
+    "exists": true,
+    "sources": [
+      "/Users/lucifinil_chen/.openclaw/agents/main/sessions/d4bb1fb4-fea8-4bf4-8829-0c01124dab0a.jsonl.reset.2026-03-08T10-24-10.873Z"
+    ]
+  },
+  {
+    "path": "/Users/lucifinil_chen/.openclaw/workspace/agents/openai/AGENTS.md",
+    "exists": true,
+    "sources": [
+      "/Users/lucifinil_chen/.openclaw/agents/main/sessions/d4bb1fb4-fea8-4bf4-8829-0c01124dab0a.jsonl.reset.2026-03-08T10-24-10.873Z"
+    ]
+  },
+  {
+    "path": "/Users/lucifinil_chen/.openclaw/workspace/agents/openai/SOUL.md",
+    "exists": true,
+    "sources": [
+      "/Users/lucifinil_chen/.openclaw/agents/main/sessions/d4bb1fb4-fea8-4bf4-8829-0c01124dab0a.jsonl.reset.2026-03-08T10-24-10.873Z"
+    ]
+  },
+  {
+    "path": "/Users/lucifinil_chen/.openclaw/workspace/agents/review/AGENTS.md",
+    "exists": true,
+    "sources": [
+      "/Users/lucifinil_chen/.openclaw/agents/main/sessions/d4bb1fb4-fea8-4bf4-8829-0c01124dab0a.jsonl.reset.2026-03-08T10-24-10.873Z"
+    ]
+  },
+  {
+    "path": "/Users/lucifinil_chen/.openclaw/workspace/agents/review/SOUL.md",
+    "exists": true,
+    "sources": [
+      "/Users/lucifinil_chen/.openclaw/agents/main/sessions/d4bb1fb4-fea8-4bf4-8829-0c01124dab0a.jsonl.reset.2026-03-08T10-24-10.873Z"
+    ]
+  },
+  {
+    "path": "/Users/lucifinil_chen/.openclaw/workspace/agents/test/AGENTS.md",
+    "exists": true,
+    "sources": [
+      "/Users/lucifinil_chen/.openclaw/agents/main/sessions/d4bb1fb4-fea8-4bf4-8829-0c01124dab0a.jsonl.reset.2026-03-08T10-24-10.873Z"
+    ]
+  },
+  {
+    "path": "/Users/lucifinil_chen/.openclaw/workspace/intel/starchain-templates/spawn-task-format.md",
+    "exists": true,
+    "sources": [
+      "/Users/lucifinil_chen/.openclaw/agents/main/sessions/d4bb1fb4-fea8-4bf4-8829-0c01124dab0a.jsonl.reset.2026-03-08T10-24-10.873Z"
+    ]
+  },
+  {
+    "path": "/Users/lucifinil_chen/.openclaw/workspace/intel/starchain-templates/step-1.5A-gemini-scan.md",
+    "exists": true,
+    "sources": [
+      "/Users/lucifinil_chen/.openclaw/agents/main/sessions/d4bb1fb4-fea8-4bf4-8829-0c01124dab0a.jsonl.reset.2026-03-08T10-24-10.873Z"
+    ]
+  },
+  {
+    "path": "/Users/lucifinil_chen/.openclaw/workspace/intel/starchain-templates/step-1.5B-openai-constitution.md",
+    "exists": true,
+    "sources": [
+      "/Users/lucifinil_chen/.openclaw/agents/main/sessions/d4bb1fb4-fea8-4bf4-8829-0c01124dab0a.jsonl.reset.2026-03-08T10-24-10.873Z"
+    ]
+  }
+]

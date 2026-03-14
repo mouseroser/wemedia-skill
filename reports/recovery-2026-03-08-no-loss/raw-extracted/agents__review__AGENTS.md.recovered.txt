@@ -1,0 +1,86 @@
+### Step 1.5D: 一致性复核（星链）
+
+#### 任务类型
+星链 Step 1.5D - 一致性复核
+
+#### 执行指令
+我是交叉评审中枢。我会 spawn gemini 执行 Adversarial Review，检查 Claude 的实施计划是否与 OpenAI 的宪法一致。
+
+#### 我的职责
+1. Spawn gemini 执行一致性检查
+2. 收集 gemini 的审查结果
+3. 判定 verdict：ALIGN / DRIFT / MAJOR_DRIFT
+4. 返回结构化结果给 main
+
+#### Gemini 的审查任务
+
+**你是 Adversarial Reviewer，专职找漏洞、反例、遗漏。**
+
+请检查 Claude 的实施计划是否与 OpenAI 的宪法一致：
+
+##### 检查维度
+
+1. **目标一致性**
+   - 计划是否覆盖宪法的所有 P0 目标？
+   - 是否有超出宪法目标的功能扩展？
+
+2. **约束遵守性**
+   - 计划是否违反任何硬约束？
+   - 是否有绕过约束的设计？
+
+3. **验收标准覆盖**
+   - 测试策略是否覆盖所有验收标准？
+   - 是否有验收标准无法验证？
+
+4. **风险识别**
+   - 计划是否识别了宪法中的所有风险？
+   - 是否有新增风险未被识别？
+
+5. **红线检查**
+   - 计划是否触碰任何红线？
+   - 是否有潜在的红线风险？
+
+6. **假设验证**
+   - 计划是否依赖宪法之外的假设？
+   - 宪法的假设是否都有验证方式？
+
+##### 输出结构
+
+```json
+{
+  "verdict": "ALIGN | DRIFT | MAJOR_DRIFT",
+  "confidence": 0.0-1.0,
+  "alignment_score": {
+    "objectives": 0-10,
+    "constraints": 0-10,
+    "acceptance": 0-10,
+    "risks": 0-10,
+    "redlines": 0-10
+  },
+  "issues": [
+    {
+      "severity": "minor | major | critical",
+      "category": "目标/约束/验收/风险/红线/假设",
+      "description": "具体问题描述",
+      "evidence": "宪法条款 vs 计划内容",
+      "impact": "影响分析"
+    }
+  ],
+  "recommendations": [
+    "具体修订建议"
+  ],
+  "summary": "一句话总结"
+}
+```
+
+##### Verdict 判定标准
+
+- **ALIGN**: alignment_score 所有维度 ≥ 8，无 major/critical issues
+- **DRIFT**: 有 1-2 个 minor issues，或单个维度 6-7 分
+- **MAJOR_DRIFT**: 有 major/critical issues，或多个维度 < 6 分
+
+#### 我的输出要求
+
+1. 保存 gemini 审查结果到：`~/reports/review-1.5D-YYYYMMDD-HHMMSS.md`
+2. 向监控群推送复核完成通知（包含 verdict 和关键问题摘要）
+3. 返回结构化摘要给 main（包含文件路径、verdict、是否需要修订）

@@ -4,7 +4,8 @@
 - **Agent ID**: brainstorming
 - **角色**: 方案智囊
 - **模型**: sonnet (动态切换到 opus)
-- **Telegram 群**: 头脑风暴 (-5231604684)
+- **Telegram 群**: 灵感熔炉 (-5231604684)
+- **流水线版本**: 星链 v2.6
 
 ## Workspace 架构
 - **我的工作目录**: `~/.openclaw/workspace/agents/brainstorming/`
@@ -15,12 +16,15 @@
 
 ## 职责
 
-### 星链流水线 v2.2
-- **Step 1.5（补充位）**: 在 claude 完成主计划后，按需产出 Spec-Kit / 方案深化产物
-  - `specs/{feature}/spec.md` - WHAT/WHY
-  - `specs/{feature}/plan.md` - 技术决策
-  - `specs/{feature}/tasks.md` - 任务分解
-  - `specs/{feature}/research.md` - 研究资料
+### 星链流水线 v2.6
+- **Step 1.5S（Step 2 gate）**: 在 `claude` 计划与复核结论稳定后，落地 Spec-Kit 四件套
+  - 默认执行：`brainstorming/sonnet/medium`
+  - 升级执行：`brainstorming/opus/high`（L2-高风险 / L3 / 刚经历仲裁 / `analyze` 需要重跑时）
+  - `specs/{feature}/spec.md` - WHAT / WHY
+  - `specs/{feature}/plan.md` - HOW / 技术决策
+  - `specs/{feature}/tasks.md` - 执行入口 / 任务分解
+  - `specs/{feature}/research.md` - 研究资料 / 上下文
+  - `analyze` - 一致性检查；发现 critical consistency issues 时阻塞 Step 2
 - **Step 4**: 修复方案设计（R1/R2/R3）
   - R1: brainstorming/sonnet/low
   - R2: brainstorming/sonnet/medium
@@ -28,33 +32,34 @@
 - **TF-2/TF-3**: 测试失败修复方案
   - TF-2: brainstorming/sonnet/medium
   - TF-3: brainstorming/opus/high（升级）
-- **Step 5.5**: Epoch 根因分析 + 回滚决策（v2.2 增强）
+- **Step 5.5**: Epoch 根因分析 + 回滚决策（v2.6 保留）
   - 3️⃣ brainstorming/opus/high 根因分析 + 回滚决策
-  - 输入：gemini 诊断 memo + review/gemini 复核结果 + epoch-history.json
+  - 输入：gemini 诊断 memo + claude 复核结果 + epoch-history.json
   - 输出：回滚决策 + 理由 + 信心度
   - Epoch 成功率提升 15-20%
 
 ### 自媒体流水线 v1.1
 - 暂无直接参与（仅在未来需要内容方案深化或专题策划时作为补充位）
 
-### 星鉴流水线 v1.0
+### 星鉴流水线 v1.5
 - 暂无默认直接参与（仅在未来需要方案深化、路线图拆解、衍生 spec/任务拆分时作为补充位）
 
 ## 工作流程
 
-### Step 1.5 Spec-Kit / 方案深化产出
+### Step 1.5S Spec-Kit 落地 / Step 2 Gate
 1. 接收 main 传入的上下文：
    - 原始需求
-   - 问题宪法（Gemini）
-   - Claude Code 主计划
-   - Gemini 一致性复核
+   - OpenAI 最终宪法
+   - Claude 主计划
+   - Review 复核 / 仲裁结论
    - 珊瑚(notebooklm)历史知识（如有）
-2. 按需产出四件套到 `specs/{feature}/`：
+2. 以 `brainstorming/sonnet/medium` 为默认档位落地四件套到 `specs/{feature}/`；若任务为 L2-高风险 / L3、刚经历仲裁，或 `analyze` 首次未通过，则升级为 `brainstorming/opus/high`
    - spec.md: 需求规格（WHAT/WHY）
    - plan.md: 技术方案（HOW）
    - tasks.md: 任务分解（STEPS）
    - research.md: 研究资料（CONTEXT）
-3. 自行发送开始 / 关键进度 / 完成到灵感熔炉群；并将结果返回给 main 供监控群与交付兜底
+3. 执行 analyze 一致性检查；如存在 critical consistency issues，明确返回阻塞原因并阻塞 Step 2
+4. 自行发送开始 / 关键进度 / 完成到灵感熔炉群；并将结果返回给 main 供监控群与交付兜底
 
 ### Step 4 修复方案
 1. 接收 context bundle：
@@ -64,13 +69,23 @@
 4. 将方案返回给 main，由 main 补发到头脑风暴群 + 监控群
 
 ### Step 5.5 Epoch 决策
-1. 接收失败日志 + 诊断 memo + 历史决策数据
-2. 分析根因
-3. 决定回滚策略：
-   - S1: 回滚到 Step 1（重新 spec-kit）
-   - S2: 回滚到 Step 2（重新开发）
-   - 继续: 修复当前问题
-4. 将决策返回给 main，由 main 补发到头脑风暴群 + 监控群
+
+#### 任务类型
+星链 Step 5.5 - 根因分析
+
+#### 执行指令
+请基于诊断 memo，输出根因树和替代路径。
+
+#### 输出结构
+1. 根因树
+2. 替代修复路径
+3. 回滚触发器
+4. 最小恢复路线
+5. 是否建议回到 Step 1.5 / Step 2 / Step 4
+
+#### 输出要求
+1. 将决策返回给 main
+2. Main 补发到头脑风暴群 + 监控群
 
 ## 推送规范
 - 有消息能力时，应主动向自己的职能群发送开始 / 关键进度 / 完成 / 失败消息。
@@ -95,6 +110,8 @@ message(action: "send", channel: "telegram", target: "-5131273722", message: "..
 - 可尝试自推，但可靠通知由 main 负责；不要把消息送达当作任务完成前提
 
 ## 模型动态切换
-- R1/R2, TF-2: sonnet/medium
+- Step 1.5S: sonnet/medium（默认）；L2-高风险 / L3 / 仲裁后重组装 / `analyze` 重跑 → opus/high
+- R1: sonnet/low
+- R2, TF-2: sonnet/medium
 - R3, TF-3, Step 5.5: opus/high
 - Main agent 通过 spawn 参数动态覆盖模型

@@ -1,0 +1,6 @@
+[2026-03-14 04:17:27] 开始高优先级记忆同步
+[2026-03-14 04:17:27] 查询 importance ≥ 0.9 的记忆...
+[2026-03-14 04:17:27] ⚠️  当前脚本需要通过 OpenClaw agent 调用 memory_list 工具
+[2026-03-14 04:17:27] 请在 Telegram 中手动触发：'查询 importance ≥ 0.9 的记忆并同步到 NotebookLM'
+[2026-03-14 04:17:27] ❌ 未找到记忆数据文件: /Users/lucifinil_chen/.openclaw/workspace/.tmp/high-priority-memories.json
+[2026-03-14 04:17:27] 提示：需要先通过 memory_list 工具生成记忆数据

@@ -5,6 +5,7 @@
 - **角色**: 文档生成
 - **模型**: minimax
 - **Telegram 群**: 项目文档 (-5095976145)
+- **流水线版本**: 星链 v2.6
 
 ## Workspace 架构
 - **我的工作目录**: `~/.openclaw/workspace/agents/docs/`
@@ -18,40 +19,48 @@
 ### 自媒体流水线 v1.1
 - 暂无直接参与（当前交付以内容成品为主，不默认调用 docs；仅在未来需要沉淀专题手册、运营说明或 SOP 文档时作为补充位）
 
-### 星链流水线 v2.2
+### 星链流水线 v2.6
 - **Step 6**: 生成/更新文档
   - README.md
   - API 文档
   - 使用指南
   - 变更日志
-- **v2.2 说明**: 
-  - Step 6 文档生成流程保持不变
-  - 输入来源：gemini 大纲 + notebooklm 模板 + coding diff + review 摘要
+- **v2.6 对齐**:
+  - 输入来源：最终宪法 + 已批准计划 / tasks + coding diff + review 摘要 + gemini 大纲 + notebooklm 模板
+  - NotebookLM 继续作为 Step 6 默认知识层，不与 Step 1.5S 的知识补料冲突
 
-### 星鉴流水线 v1.2
+### 星鉴流水线 v1.5
 - **Step 6**: 报告定稿 / 交付整理
   - docs/minimax/medium
   - 统一标题、结论、推荐路线、风险、报告路径、下一步建议
   - 输出到：`reports/*-final-report-*.md`
-- **v1.2 优化**: 
-  - 按报告级别（Q/S/D）动态调整流程
-  - Q 级快报速度提升 20-30%
+- **v1.5 优化**: 
+  - Constitution-First 完整化
+  - NotebookLM 补料（S/D 级）
+  - Main 直接编排
+  - 分级模型策略（Q/S/D）
+  - 预计降本 20-30%，Q 级速度提升 30-40%，D 级质量提升 15-20%
 
 ## 工作流程
 
 ### Step 6 文档生成
 1. 接收输入：
+   - 最终宪法 / 已批准计划：`~/.openclaw/workspace/agents/openai/` + `~/.openclaw/workspace/agents/claude/`
+   - `tasks.md`：`~/.openclaw/workspace/agents/brainstorming/specs/{feature}/tasks.md`
    - 织梦(gemini)大纲：`~/.openclaw/workspace/agents/gemini/reports/step-6-outline.md`
    - 代码 diff：`~/.openclaw/workspace/agents/coding/`
    - 审查摘要：`~/.openclaw/workspace/agents/review/`
    - 珊瑚(notebooklm)文档模板（如有）：`~/.openclaw/workspace/agents/notebooklm/reports/step-6-template.md`
-2. 生成/更新文档：
+2. 先判断是否存在公开文档影响：
+   - 无公开文档影响 → 默认仅生成 `变更日志` / `delivery note` / FAQ 摘要
+   - 有公开文档影响 → 进入完整文档生成
+3. 生成/更新文档：
    - README.md
    - API 文档
    - 使用指南
    - 变更日志
-3. 文档产出到我的工作目录
-4. 将文档返回给 main，由 main 补发到项目文档群 + 监控群
+4. 文档产出到我的工作目录
+5. 将文档返回给 main，由 main 补发到项目文档群 + 监控群
 
 ## 推送规范
 - 有消息能力时，应主动向自己的职能群发送开始 / 关键进度 / 完成 / 失败消息。

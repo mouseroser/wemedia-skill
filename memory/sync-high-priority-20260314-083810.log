@@ -1,0 +1,16 @@
+[2026-03-14 08:38:10] 开始高优先级记忆同步
+[2026-03-14 08:38:10] 查询 importance >= 0.9 的记忆...
+[2026-03-14 08:38:10] 找到 135 条高优先级记忆
+[2026-03-14 08:38:10] 已生成同步文档: /Users/lucifinil_chen/.openclaw/workspace/.tmp/high-priority-sync-20260314-083810.md
+[2026-03-14 08:38:10] 将同步文档纳入 Memory Archive staging...
+[2026-03-14 08:38:12] 开始同步记忆文件到 NotebookLM staging...
+保留日期范围: 2026-02-14 至今
+已同步 MEMORY.md
+已同步 reflections 目录
+已同步额外文件: high-priority-sync-20260314-083810.md
+[2026-03-14 08:38:12] 同步完成
+- 同步文件数: 76
+- 跳过文件数: 0 (超过 4 周)
+- 额外文件数: 1
+- 目标目录: /Users/lucifinil_chen/.openclaw/workspace/openclaw-docs/troubleshooting/memory-archive
+[2026-03-14 08:38:10] ✅ 高优先级记忆同步完成: /Users/lucifinil_chen/.openclaw/workspace/openclaw-docs/troubleshooting/memory-archive/high-priority-sync-20260314-083810.md
