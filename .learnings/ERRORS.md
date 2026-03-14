@@ -292,3 +292,22 @@ For cron agents that log results into daily memory files, prefer append/write-sa
 - 先排“索引范围冲突”，再谈“排序策略优化”
 
 **优先级**: P1 - 重要，但当前不应直接修成架构迁移
+
+## 2026-03-14: Ollama batch embedding 热修复
+
+**问题**: OpenClaw 的 Ollama embedding provider 使用旧 `/api/embeddings` 端点（单条），`embedBatch` 实现为 `Promise.all(texts.map(embedOne))`，N 条 = N 次 HTTP 请求。
+
+**根因**: Ollama 2024 年就支持了 `/api/embed` batch 端点，但 OpenClaw 的 `embeddings-ollama.ts` 没有更新。
+
+**修复**: 热修复 `dist/reply-BEN3KNDZ.js`，新增 `embedBatchNative` 函数使用 `/api/embed`，带 graceful fallback。
+
+**文件**: `~/.openclaw/runtime-overrides/ollama-batch-embed-hotfix/`
+- `hotfix-patch.py` — 检测 / 应用 / 回滚（三模式）
+- `check-hotfix.sh` — cron 调用，自动检测 + 重新应用 + 重启
+- `apply-hotfix.sh` — 手动应用
+
+**Issue**: https://github.com/openclaw/openclaw/issues/45944
+**Cron**: `hotfix-check-after-update` (9ec9bae9)，每 6 小时检查一次
+**性能**: 2.4x 加速（10 条文本 227ms → 95ms）
+
+**教训**: `set -e` + 非零退出码 = 脚本提前终止。对于"检测到需要修复"这种正常的非零退出，不能用 `set -e`。
