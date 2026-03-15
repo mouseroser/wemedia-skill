@@ -311,3 +311,111 @@ For cron agents that log results into daily memory files, prefer append/write-sa
 **性能**: 2.4x 加速（10 条文本 227ms → 95ms）
 
 **教训**: `set -e` + 非零退出码 = 脚本提前终止。对于"检测到需要修复"这种正常的非零退出，不能用 `set -e`。
+
+## 2026-03-15: layer2-health-check.sh 使用不存在的 CLI 命令 `openclaw memory-pro`
+
+**问题**: Layer 2 健康检查脚本持续报 "缺少 openai 模块" + "unknown command 'memory-pro'"，连续 4 天（3/12~3/15）召回测试要么跳过要么失败。
+
+**根因链（为什么总是用错误的 CLI）**:
+1. **脚本是 AI agent（cron isolated session）自动生成的**，不是人写的
+2. 生成时 agent 把 memory-lancedb-pro 的**插件名**当成了 **CLI 子命令名**，臆造了 `openclaw memory-pro search --scope agent:main --limit 3` 这个完全不存在的命令
+3. OpenClaw 正确的 CLI 是 `openclaw memory search`（builtin memory search），不是 `openclaw memory-pro`
+4. **脚本生成后没有做过验证测试**——第一次跑就报错（3/12），但因为 `|| true` 吞掉了退出码，只是在报告里写了 "⚠️ memory-pro CLI 不可用，跳过召回测试"
+5. 3/13 和 3/14 恰好不知道怎么通过了（可能 agent 在 session 内做了不同的事），但 3/15 再次爆出 `Cannot find module 'openai'` + `error: unknown command 'memory-pro'`
+6. 报错信息 "缺少 openai 模块" 具有误导性——实际上 openai npm 包已装好且 Gateway 内插件完全正常；是**错误的 CLI 命令触发了插件在错误上下文重新加载**才找不到模块
+
+**根本教训**:
+- **AI agent 自动生成的脚本必须立即验证**：生成后至少跑一次 dry-run
+- **不要把插件名当 CLI 子命令臆造**：先 `openclaw help` 确认可用子命令
+- **`|| true` 吞错误 + 报告里只写 warning = 问题被静默化**：重要错误应该有显式告警机制
+- **cron 的 agentTurn 每次是全新 session**：agent 没有上次跑的记忆，每次都可能犯同样的错误——所以**依赖的脚本必须是确定性的、经过验证的**
+
+**修复**: 将 `openclaw memory-pro search --scope agent:main "晨星" --limit 3` 改为 `openclaw memory search "晨星"`，并适配输出格式解析（分数行 `0.621 memory/file.md:1-33`）。修复后立即测试通过，召回 8 条结果，健康评分恢复到 75/100。
+
+**预防措施**:
+- 新建/修改 cron 依赖脚本后，必须在当前 session 内立即执行一次验证
+- 对于 CLI 命令，先 `openclaw <cmd> --help` 确认存在再写入脚本
+- 考虑在脚本开头加 `openclaw memory search --help >/dev/null 2>&1 || { echo "FATAL: CLI not available"; exit 1; }` 的前置检查
+
+**优先级**: P1 - 已修复
+
+## 2026-03-15 凌晨: OpenClaw 升级 + PR 分支切换导致 Layer 3 完全失效
+
+**问题**: Layer 3 (NotebookLM fallback) 完全不工作，既没有配置也没有代码。
+
+**根因（双重叠加）**:
+1. **升级裁掉配置**：OpenClaw 升级到 v2026.3.13 后，`openclaw.json` 中 `plugins.entries["memory-lancedb-pro"].config.layer3Fallback` 配置块被自动清掉
+2. **分支切换影响 runtime**：workspace 插件工作树（也是 live runtime 加载路径）停留在 `fix/skip-claude-review-on-fork-prs` 分支，该分支不含 layer3Fallback 代码
+3. 两个问题各自就能导致 Layer 3 失效，叠加后更难排查
+
+**影响**: 严重 — Layer 3 深度记忆检索完全不可用
+
+**解决方案**:
+1. 切回正确分支 `feat/layer3-notebooklm-fallback`
+2. 通过 `gateway config.patch` 恢复 layer3Fallback 配置
+3. **建立防护机制**：
+   - 专用 runtime worktree `~/.openclaw/runtime-plugins/memory-lancedb-pro`（分支 `runtime/layer3-fallback-active`），与 PR 工作树完全分离
+   - PR 开发用独立 worktree `~/.openclaw/worktrees/memory-lancedb-pro/pr-xxx`
+   - HEARTBEAT.md 增加守护规则
+   - 状态文件 `~/.openclaw/state/layer3-fallback-guard.json`
+
+**教训**:
+- **不要用同一个 worktree 既跑 runtime 又做 PR 开发** — 切分支会直接影响生产
+- **OpenClaw 升级可能裁掉自定义插件配置** — 升级后必须检查 layer3Fallback 配置是否还在
+- 心跳检查应该同时验证：版本号、runtime load path、layer3Fallback 配置存在性
+
+**优先级**: P0 - 已修复并建立防护
+
+---
+
+## 2026-03-15 10:30 - Cron delivery 缺少 target 导致假 error
+
+**问题**: `记忆压缩检查` 和 `layer3-deep-insights` 两个 cron 任务实际执行成功，但状态显示 `error`
+
+**根因**: delivery 配置里有 `mode: announce` 但没有 `to` 字段，Telegram 投递时报 "Delivering to Telegram requires target \<chatId\>"
+
+**影响**: 低 — 任务本身完成了，只是通知没发出去 + 状态显示 error
+
+**解决**: 补上 `delivery.to: "1099011886"`
+
+**教训**: 
+- 新建 cron 任务时，如果设了 `delivery.mode: announce`，必须同时设 `to` 和 `channel`
+- 心跳检查应把 "delivery error" 和 "task error" 区分开
+- 这类 delivery error 会导致 `consecutiveErrors` 计数增长，掩盖真正的任务错误
+
+**优先级**: P2 - 已修复
+
+---
+
+## 2026-03-15 23:50 - LanceDB API / 手工导入记忆的两个坑
+
+**问题 1**: 排障时把 Python LanceDB API 当成 JS API 使用，调用了不存在的 `table.query()`。
+
+**根因**:
+1. 直接类比插件源码（JS/TS）里的 `table.query()`
+2. 没先在 Python 环境里确认实际 API
+3. 结果报错：`AttributeError: 'LanceTable' object has no attribute 'query'`
+
+**正确做法**:
+- Python 版先用 `table.search().where(...).select(...).to_list()`
+- 跨语言排障时，不要假设同名库 API 完全一致
+
+**问题 2**: 通过底层 LanceDB 手工导入后，部分旧 memory 记录虽然可检索，但 `memory_update` / `memory_forget` 可能提示 `outside accessible scopes`。
+
+**根因**:
+1. 绕过了插件正常写入链路，直接操作底层表
+2. 工具层的可访问性 / 作用域校验与手工导入记录之间存在不一致
+
+**正确做法**:
+- 优先通过 `memory_store` / `memory_update` / `memory_forget` 维护记忆
+- 只有在数据恢复场景才直接操作 LanceDB
+- 恢复后要额外验证：检索、stats、update、forget 四条链路都正常
+
+**影响**: 中等 - 容易在恢复后留下“能搜到但改不掉/删不掉”的脏数据
+
+**预防措施**:
+1. 先确认库的真实 API，再写迁移/恢复脚本
+2. 底层恢复完成后，必须补做工具层 CRUD 验证
+3. 如需批量迁移，优先找插件官方 import/upgrade 路径，而不是直接写表
+
+**优先级**: P1 - 重要，后续恢复/迁移场景高概率复现

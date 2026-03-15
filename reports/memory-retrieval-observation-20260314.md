@@ -1,72 +1,69 @@
-# Memory Retrieval Observation Log — 2026-03-14 起
+# Memory Retrieval Observation - 2026-03-14
 
-**观察期目标**：连续 7 天跟踪记忆召回质量，记录：
-- 主链路 `memory-lancedb-pro` 的命中率、歧义、重复度
-- builtin memorySearch 的可评估状态
-- 是否适合继续推进 hybrid / MMR / temporalDecay / sessionMemory
+## Day 1（2026-03-14）
+- 详见 `memory-retrieval-scorecard-20260314.md`
+- L2 平均分：2.3/5，部分查询有效
+- 参考价值：Day 1 使用的是 nomic-embed-text 模型
 
----
+## Day 2 前半段（2026-03-15，nomic-embed-text）
 
-## Day 1 — 2026-03-14
+L2+L3 联动验证（精简 5 条 + benchmark 10 条），**L2 全部 0 分**。
 
-### 执行内容
-- 建立基线报告
-- 建立 benchmark 查询集与评分口径
-- 起草配置草案（未应用）
-- 排查 builtin memorySearch 阻塞点
-- 排查 `memory/archive/` 目录依赖范围
+### 根因分析（同日完成）
+1. **nomic-embed-text 中文语义分辨力极差**：所有中文 pair cosine sim 在 0.65-0.82 之间，无分辨力。"记忆系统配置" vs "我对用户的称呼是晨星" (0.732) 比 vs "记忆系统技术栈正确配置" (0.582) 还高。
+2. **BM25/FTS 中文分词失效**：LanceDB Tantivy 分词器不支持中文连续词拆分，"记忆系统配置" 搜索 0 条，"记忆 系统 配置" 才能命中。
+3. **Rerank 正常**：bge-reranker-v2-m3 对中文工作良好（score 0.96），但候选池里没有正确内容。
 
-### 结果摘要
-#### 主链路：memory-lancedb-pro
-- 状态：正常
-- `memory_stats`: 324 条
-- `memory_recall`: 抽样命中良好
-- 已知问题：个别术语有歧义（如 scripts）
+### 修复：切换 bge-m3
 
-#### 影子链路：builtin memorySearch
-- 状态：当前不适合公平评估
-- 现象：`openclaw memory search` 多次触发
-  - `Ollama embeddings HTTP 500: the input length exceeds the context length`
-- 高概率根因：`memory/archive/` 中超大归档文件仍在 builtin 默认索引范围内
+同日执行 embedding 模型切换：
+- nomic-embed-text (768维) → **bge-m3 (1024维)**
+- 376 条记忆全量重新 embedding（耗时 42 秒）
+- FTS 索引重建
 
-### 今日判断
-1. 暂不应用 builtin 增强配置
-2. 暂不迁移 archive 目录
-3. 先把 builtin memorySearch 视为**暂缓评估的影子线**
-4. 主链路继续依赖 `memory-lancedb-pro`
-5. 重新评估 builtin 前，必须先满足前置条件清单（见 `reports/builtin-memorysearch-prerequisites-20260314.md`）
-6. Day 1 实际评分单已落档：`reports/memory-retrieval-scorecard-20260314.md`
+## Day 2 后半段（2026-03-15，bge-m3 切换后）
 
-### 明日关注点
-- 如果继续观察，优先记录：
-  - 主链路是否出现误召回 / 冲突召回
-  - 是否还有新的超大文件进入 `memory/` 或 `memory/archive/`
-  - builtin memorySearch 是否仍稳定报同一类错误
+| # | 查询 | L2 命中 | L2 质量 (0-5) | 首条内容 | 冲突 |
+|---|---|---|---:|---|---|
+| 1 | 我的核心偏好是什么 | ✅ 3条 | 5 | 记忆管理原则（精确匹配） | 否 |
+| 2 | 今天的待办任务 | ✅ 3条 | 3 | TODO 提醒（相关） | 否 |
+| 3 | 记忆系统配置 | ✅ 3条 | 5 | 技术栈正确配置（完美匹配） | 否 |
+| 4 | 最近的踩坑记录 | ✅ 3条 | 4 | 踩坑记录偏好 | 否 |
+| 5 | 星链流水线的状态 | ✅ 3条 | 5 | v2.7 升级（完美匹配） | 否 |
+| 6 | 晨星主要用什么渠道联系 | ✅ 3条 | 5 | 用户信息+Telegram | 否 |
+| 7 | 主私聊会话有什么约束 | ✅ 3条 | 5 | 核心规则-占线约束 | 否 |
+| 8 | 我的核心偏好 | ✅ 3条 | 4 | 偏好记录 | 否 |
+
+### 汇总
+- L2 命中率：**8/8 = 100%** (之前 0%)
+- L2 平均质量：**4.5/5** (之前 0.0/5)
+- L3 触发：1/8（因为 L2 足够好，L3 不再需要）
+- 冲突率：0%
+
+### 结论
+bge-m3 切换是质变性改善。L2 从完全不可用到 100% 命中。
 
 ---
 
 ## 后续填写方式
 - 每天先用：`reports/memory-retrieval-scorecard-template-20260314.md`
 - 填完后，把当日摘要回写到本观察日志对应日期小节
-- 这样主日志保持简洁，详细评分单独留档
-
-## Day 2 — 2026-03-15
-- 待记录（使用 scorecard template）
+- Day 2 详细评分：`reports/memory-retrieval-scorecard-20260315.md`
 
 ## Day 3 — 2026-03-16
-- 待记录（使用 scorecard template）
+- 待记录
 
 ## Day 4 — 2026-03-17
-- 待记录（使用 scorecard template）
+- 待记录
 
 ## Day 5 — 2026-03-18
-- 待记录（使用 scorecard template）
+- 待记录
 
 ## Day 6 — 2026-03-19
-- 待记录（使用 scorecard template）
+- 待记录
 
 ## Day 7 — 2026-03-20
-- 待记录（使用 scorecard template）
+- 待记录
 
 ---
 

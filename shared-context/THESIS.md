@@ -10,31 +10,33 @@
 
 ### 关注领域
 1. **OpenClaw 多智能体系统**
-   - 星链流水线 v2.6（Main 直接编排，Review 只做审查）
+   - 星链流水线 v2.8（NotebookLM 证据驱动打磨层 + 动态模型分配）
    - 自媒体流水线 v1.1（Constitution-First 前置链）
    - 星鉴流水线 v1.2（轻量宪法 + NotebookLM 主研究）
 
 2. **记忆系统优化**
-   - memory-lancedb-pro + 本地 rerank sidecar
-   - 三层记忆架构（MEMORY.md + 每日日志 + shared-context）
-   - 血泪教训和错误示范机制
+   - memory-lancedb-pro + 本地 rerank sidecar + Layer 3 NotebookLM fallback
+   - 三层记忆架构（MEMORY.md + 向量数据库 + NotebookLM）
+   - 升级防护机制（post-upgrade-guard.sh）
 
 3. **工具链完善**
-   - NotebookLM 知识库（openclaw-docs, media-research）
-   - 本地 Ollama（nomic-embed-text, qwen2.5:7b）
+   - NotebookLM 知识库（openclaw-docs, memory-archive, troubleshooting）
+   - 本地 Ollama（bge-m3 embedding + bge-reranker-v2-m3 rerank）
    - Telegram 群组通知（12 个 agent 职能群 + 监控群）
+   - Cron 分层管理（minimax 脚本型 / sonnet 工具型 / opus 编排型）
 
 ---
 
 ## 我已经写了什么
 
-### 星链流水线 v2.6（2026-03-08）
+### 星链流水线 v2.8（2026-03-12）
 - ✅ Main 直接编排所有 agent
 - ✅ Review 改为单一审查任务
-- ✅ Constitution-First 打磨层（gemini → openai → claude → review）
+- ✅ NotebookLM 提前介入打磨层（Step 1.5B），证据驱动宪法
+- ✅ Brainstorming 动态模型分配（L1/L2 sonnet, L3 opus）
 - ✅ Spec-Kit 落地（brainstorming → analyze gate）
 - ✅ 增强 Epoch 诊断与仲裁
-- ✅ 降本 30-40%，效率提升 30-40%，Epoch 成功率提升 15-20%
+- ✅ 预期降本 35-45%，效率提升 30-40%
 
 ### 自媒体流水线 v1.1（2026-03-06）
 - ✅ Constitution-First 前置链
@@ -47,32 +49,44 @@
 - ✅ claude 主方案
 - ✅ review/gemini 一致性复核
 - ✅ review/gpt 按需仲裁
+- ✅ 首次完整运行验证通过（2026-03-13，Main 直接编排模式）
 
-### 记忆系统三层架构（2026-03-07 - 2026-03-12）
-- ✅ memory-lancedb-pro 部署（P1 状态）
-- ✅ 本地 rerank sidecar（BAAI/bge-reranker-v2-m3）
-- ✅ MEMORY.md 重构（血泪教训 + 错误示范 + 核心偏好）
-- ✅ 每日日志模板优化
-- ✅ shared-context/ 优化
+### 记忆系统三层架构（2026-03-07 - 2026-03-15）
+- ✅ memory-lancedb-pro 部署 + 升级回归修复机制
+- ✅ 本地 rerank sidecar（BAAI/bge-reranker-v2-m3，MPS加速）
+- ✅ Layer 3 NotebookLM fallback 开发 + PR #206 提交
+- ✅ 移除 openai SDK 依赖，改用原生 fetch 调本地 Ollama
+- ✅ 升级守护脚本 post-upgrade-guard.sh（6小时自动修复）
+- ✅ runtime worktree 与 PR worktree 分离
+- ✅ P2.3 关闭：builtin memorySearch 不再作为双轨路线
+- ✅ MEMORY.md 重构 + 定期维护 cron
 
 ### Agent 配置完善（2026-03-12）
 - ✅ 为所有 12 个 agent 生成完整配置（SOUL.md, IDENTITY.md, HEARTBEAT.md）
 - ✅ 每个 agent 都有独特的人格、emoji 和灵感来源
 - ✅ 明确职责边界和硬性约束
 
+### 运维优化（2026-03-15）
+- ✅ Control UI hotfix 退役（OpenClaw 2026.3.13 已内置修复）
+- ✅ Cron 第二轮稳态优化（minimax/sonnet/opus 分层）
+- ✅ 路径索引 PATHS.md + Cron 总表 CRON-MATRIX.md
+- ✅ openclaw-docs source 堆积问题修复（独立原子脚本）
+- ✅ PR #210 合并（fork PR 跳过 claude-review）
+
 ---
 
 ## 还有哪些空白
 
 ### 短期空白（1-2 周）
-- ⚠️ 星链流水线 v2.6 尚未完整执行验证
+- ⚠️ 星链流水线 v2.8 尚未完整执行验证
 - ⚠️ 自媒体流水线尚未启动首次内容创作
-- ⚠️ 记忆系统观察期反馈尚未收集
-- ⚠️ Agent 配置尚未在真实任务中测试
+- ⚠️ L2+L3 联动 7 天观察期进行中（4E）
+- ⚠️ 方案 C（异步投递模式）待晨星确认后纳入计划
+- ⚠️ PR #206 等待 maintainer 审批合并
 
 ### 中期空白（1-3 个月）
-- ⚠️ 本地 rerank sidecar 性能优化
-- ⚠️ Ollama backend 实验验证
+- ⚠️ enhanced_memory_recall 工具开发（L2→L3 自动降级）
+- ⚠️ Ollama backend 作为 Smart Extraction LLM 的实验验证
 - ⚠️ 星鉴流水线自动化报告生成
 - ⚠️ 更多本地化 AI 工具链探索
 
@@ -85,21 +99,18 @@
 
 ## 下一步计划
 
-### 本周（2026-03-12 - 2026-03-18）
-1. **验证星链流水线 v2.6**
-   - 在真实任务中完整执行一次
-   - 验证降本增效效果
-   - 收集 Epoch 成功率数据
+### 本周剩余（2026-03-16 - 2026-03-18）
+1. **L2+L3 联动观察**
+   - 持续记录每日召回评分
+   - 验证 Layer 3 fallback 真实触发场景
 
-2. **启动自媒体流水线**
-   - 完成首个完整内容创作流程
-   - 验证 Constitution-First 前置链
-   - 测试晨星确认门控
+2. **Spec-Kit 实施跟进**
+   - 方案 C（异步投递）确认并纳入 4F
+   - 星链 v2.8 首次真实任务执行
 
-3. **记忆系统观察期**
-   - 监控真实漏召回
-   - 按需补充原子记忆
-   - 收集性能数据
+3. **主执行计划收尾**
+   - 4A.3 9层架构适配计划同步维护
+   - 回顾本周进度，更新下周计划
 
 ### 下周（2026-03-19 - 2026-03-25）
 1. **Agent 配置实战测试**
@@ -107,17 +118,30 @@
    - 验证人格定义是否生效
    - 收集反馈并调整
 
-2. **本地 rerank 优化**
-   - 实验 Ollama backend
-   - 对比 transformers vs ollama 性能
-   - 决定生产默认方案
+2. **PR #206 跟进与合并**
+   - 等待 maintainer 审批
+   - 合并后迁移到上游版本，退役本地 runtime worktree
 
 3. **流水线版本管理**
    - 清理旧版本流程图和合约
    - 只保留最近两个版本
-   - 更新所有 agent 的 AGENTS.md
 
 ---
 
-**最后更新**: 2026-03-12 15:10
-**下次回顾**: 2026-03-19（每周日）
+**最后更新**: 2026-03-15 22:00（记忆压缩维护 cron）
+**下次回顾**: 2026-03-22（每周日）
+��效
+   - 收集反馈并调整
+
+2. **PR #206 跟进与合并**
+   - 等待 maintainer 审批
+   - 合并后迁移到上游版本，退役本地 runtime worktree
+
+3. **流水线版本管理**
+   - 清理旧版本流程图和合约
+   - 只保留最近两个版本
+
+---
+
+**最后更新**: 2026-03-15 22:00
+**下次回顾**: 2026-03-22（每周日）
