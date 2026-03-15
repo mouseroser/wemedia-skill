@@ -25,6 +25,7 @@
 | 只配 OpenClaw requireMention | 同时关 Telegram Privacy Mode |
 | skills 放 workspace 下 | 放 `~/.openclaw/skills/` |
 | TODO 放 workspace 下 | 放 `~/.openclaw/todo/` |
+| Control UI hotfix 长期挂着不回看 | 先跑 `check-installed-control-ui-context-notice-css.sh` 验证内置 bundle；已修复就切回安装版 |
 | 说"要我...吗？" | 知道规则就直接执行 |
 | 发现问题先报告等指令 | 发现问题立即修复再报告 |
 
