@@ -224,3 +224,64 @@ Keep runtime and PR worktrees permanently separated. Treat version changes as a 
 - Last-Seen: 2026-03-15
 
 ---
+
+## [LRN-20260316-002] correction
+
+**Logged**: 2026-03-16T12:52:00Z
+**Priority**: high
+**Status**: pending
+**Area**: config
+
+### Summary
+NotebookLM / OpenClaw docs / notebook 行为排查时，必须先按既有记忆规则走 notebooklm skill / notebook 路线；不能因为手头有别的相关 skill（如 memory-architecture-manager）就先走泛化排查。
+
+### Details
+用户明确指出这次排查没有先“查记忆”。而已有 learnings 已经写明：OpenClaw/NotebookLM 相关调查应优先走 notebooklm skill / openclaw-docs notebook 路线。此次我先用了 memory-architecture-manager skill 和本地 CLI 验证，虽然最后定位出部分根因，但执行顺序错了，属于“知道规则但没执行”。
+
+### Suggested Action
+以后遇到 NotebookLM、本地 notebook CLI、OpenClaw docs / config / notebook 行为相关问题：
+1. 先回看既有记忆 / learnings；
+2. 优先走 notebooklm skill 或其等效脚本入口（如 `~/.openclaw/skills/notebooklm/...`）；
+3. 只有在该路径不可用时，才退回到其他相关 skill 或本地泛化排查。
+
+### Metadata
+- Source: user_feedback
+- Related Files: .learnings/LEARNINGS.md, ~/.openclaw/skills/notebooklm/, ~/.openclaw/skills/memory-architecture-manager/
+- Tags: notebooklm, skill-selection, execution-discipline, correction
+- See Also: LRN-20260313-001, LRN-20260313-004
+- Recurrence-Count: 2
+- First-Seen: 2026-03-13
+- Last-Seen: 2026-03-16
+
+---
+
+## [LRN-20260317-001] correction
+
+**Logged**: 2026-03-17T02:55:00Z
+**Priority**: high
+**Status**: pending
+**Area**: infra
+
+### Summary
+在讨论 git worktree 清理时，必须明确区分“运行态路径”和“非运行态路径”；不能用“这个 worktree”之类的模糊指代。
+
+### Details
+在解释 PR #206 / Layer 3 fallback 相关 worktree 是否可退役时，我用了“要不要把这个本地 worktree 退役、清理掉”这种不够精确的说法。实际这里至少有 3 个不同角色的路径：正在被 openclaw.json 加载的 live runtime worktree、旧 PR worktree、以及其他非运行态 worktree。模糊表达会让人误以为我在推动删除当前运行中的 live 路径，属于表述不严谨，也容易制造被“引导/操纵”的观感。
+
+### Suggested Action
+以后凡是涉及 worktree / branch / runtime path 清理：
+1. 先点名具体绝对路径；
+2. 明确标出是否为当前配置加载路径；
+3. 先给“不可动 / 可清理 / 待确认”三色分类，再谈删除；
+4. 未完成分类前，不要提出“要不要直接清理”这种总括式问题。
+
+### Metadata
+- Source: user_feedback
+- Related Files: ~/.openclaw/openclaw.json, ~/.openclaw/runtime-plugins/memory-lancedb-pro, ~/.openclaw/workspace/plugins/memory-lancedb-pro, ~/.openclaw/worktrees/memory-lancedb-pro/pr-187-refresh
+- Tags: worktree, runtime-path, wording, correction, execution-discipline
+- Pattern-Key: clarify.runtime-vs-nonruntime-paths
+- Recurrence-Count: 1
+- First-Seen: 2026-03-17
+- Last-Seen: 2026-03-17
+
+---
