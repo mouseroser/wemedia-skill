@@ -512,3 +512,24 @@ Offset 120 is beyond end of file (66 lines total)
 - See Also: `ERR-20260311-001`, `ERR-20260313-001`
 
 ---
+
+---
+
+## [ERR-20260317-EDIT-UNIQUE]
+
+**Logged**: 2026-03-17T08:48:00Z
+**Priority**: medium
+**Status**: pending
+**Area**: docs
+
+### Summary
+`edit` 工具在目标文本出现多次时会直接失败；在重复段落/脏尾巴文件上不能假设匹配唯一。
+
+### Details
+修改 `shared-context/THESIS.md` 时，直接用较短的 `old_string` 替换“PR #206 跟进与合并”段落，结果命中 2 处重复文本，`edit` 返回：`Found 2 occurrences of the text ... The text must be unique.` 根因是文件尾部存在一段重复内容/乱码残留，导致同一块文本出现两次。
+
+### Suggested Action
+在对可能有重复块的文件使用 `edit` 前，先用 `grep -n` / `read` 定位重复区间；必要时带上更大上下文做唯一匹配，或先清掉重复尾巴再替换。不要在未确认唯一性的情况下用短片段直接 edit。
+
+### Metadata
+- Source: manual/main-session
