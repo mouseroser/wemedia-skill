@@ -359,3 +359,27 @@ Before committing, check whether the edited path is inside the current repositor
 - Tags: git, workspace-boundary, todo, repo-scope
 
 ---
+
+## [LRN-20260317-004] correction
+
+**Logged**: 2026-03-17T08:53:00Z
+**Priority**: high
+**Status**: pending
+**Area**: docs
+
+### Summary
+在已经达成“当前不做执行性动作”的结论后，后续“继续”应优先理解为继续讨论/收口，而不是自动实体化为新交付物。
+
+### Details
+围绕 PR #227 反馈讨论 4H 上游策略时，已经形成“当前不启动上游执行性动作”的边界，但我随后仍把 PR-A 继续推进成 scope 草案文档和计划进展。这越过了讨论与执行的边界。正确做法是：若前文结论是“现在不做”，则后续“继续”默认继续分析、整理边界或回答问题；只有用户明确要求“开始起草/开始实现/开始提 PR”时，才把策略转成执行产物。
+
+### Suggested Action
+遇到“先不做 / 暂不启动 / 只讨论策略”这类结论后，为后续动作加一道显式检查：
+1. 当前是在继续讨论，还是开始执行？
+2. 用户是否明确授权生成执行产物（草案、PR、代码、提交）？
+3. 若没有，就停留在分析层，不要自动下钻到 deliverable。
+
+### Metadata
+- Source: user_feedback
+- Related Files: shared-context/THESIS.md, memory/2026-03-17.md
+---
