@@ -1,5 +1,7 @@
 # TODO Autopilot v1
 
+> 边界定义见：`shared-context/TODO-BOUNDARY.md`
+
 ## 目标
 按优先级自动推进 `~/.openclaw/todo/` 下的计划，并在有实质进展时同步更新：
 - `master-execution-plan.md`
