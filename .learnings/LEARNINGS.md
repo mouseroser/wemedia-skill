@@ -308,3 +308,29 @@ When I explicitly promise a named artifact (roadmap, checklist, report, draft, s
 - Tags: follow-through, promised-deliverable, correction, workflow
 
 ---
+
+## [LRN-20260317-003] best_practice
+
+**Logged**: 2026-03-17T14:52:00+08:00
+**Priority**: low
+**Status**: pending
+**Area**: tooling
+
+### Summary
+Do not combine `cmd | python3 - <<'PY'` when the Python process is supposed to consume piped JSON on stdin; the heredoc script occupies stdin and the pipe input is lost.
+
+### Details
+While trying to parse `openclaw cron list --json`, I used a shell pattern like `openclaw cron list --json | python3 - <<'PY' ... PY`. Because `python3 -` reads the script from stdin via heredoc, the piped JSON never reached the Python code as data. This produced a confusing parse failure and is a reusable shell gotcha.
+
+### Suggested Action
+When parsing piped JSON with Python, use one of these instead:
+1. `openclaw cron list --json | python3 -c '...'`
+2. `python3 - <<'PY'` plus explicit subprocess call inside Python
+3. write the JSON to a temp file, then read it from Python
+
+### Metadata
+- Source: error
+- Related Files: .learnings/LEARNINGS.md
+- Tags: shell, stdin, pipe, heredoc, parsing
+
+---
