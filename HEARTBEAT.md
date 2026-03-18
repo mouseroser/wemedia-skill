@@ -39,20 +39,23 @@ openclaw cron trigger <task-id>
 ```
 
 ### OpenClaw 升级 / Layer 3 守护
-维护状态文件：`~/.openclaw/state/layer3-fallback-guard.json`
+运行统一守护脚本：
+```bash
+bash ~/.openclaw/scripts/post-upgrade-guard.sh
+```
 
-每次心跳时额外检查：
-1. 当前 OpenClaw 版本是否发生变化（相对 state 文件中的 `lastKnownOpenClawVersion`）
-2. `plugins.load.paths` 是否仍指向 runtime 专用路径：
-   - `/Users/lucifinil_chen/.openclaw/runtime-plugins/memory-lancedb-pro`
-3. `plugins.entries["memory-lancedb-pro"].config.layer3Fallback` 是否仍存在且启用
+该脚本自动检查并修复：
+1. OpenClaw 版本是否变化（变化时自动备份配置到 `~/.openclaw/config-backups/`）
+2. `layer3Fallback` 配置是否被清掉（自动恢复完整配置块）
+3. `plugins.load.paths` 是否仍指向 runtime 专用路径（自动修复为 `~/.openclaw/runtime-plugins/memory-lancedb-pro`）
+4. runtime worktree 分支是否正确（`runtime/layer3-fallback-active`）
+5. 如有修复，自动重启 gateway
 
-如果任一项异常：
-- 立即把 runtime 加载路径恢复到专用 runtime worktree
-- 立即恢复 `layer3Fallback` 配置块（`enabled:true`, `agent:notebooklm`, `notebook:memory-archive`, `timeout:45` + triggers）
-- 立即触发 gateway 重启重新加载
-- 更新 state 文件中的版本与检查时间
-- 仅在发生修复或需要晨星介入时才提醒；否则保持安静
+如果脚本输出 `RESULT=ok` → 不需要额外操作
+如果输出 `RESULT=auto_fixed` 或 `RESULT=version_changed` → 报告修复内容
+如果分支异常 → 需要人工检查，不自动切换
+
+同时由 cron `post-upgrade-guard` 每 6 小时自动运行。
 
 硬规则：
 - **绝不要**再把 runtime plugin load path 指回 `~/.openclaw/workspace/plugins/memory-lancedb-pro` 这种 PR/开发树
@@ -70,6 +73,35 @@ openclaw cron trigger <task-id>
 - `shared-context/` (THESIS.md, FEEDBACK-LOG.md, SIGNALS.md)
 - `intel/` (agent 协作文件)
 - `memory/` (每日日志)
+
+### 自媒体运营系统检查
+检查自媒体运营链路是否完整：
+
+1. **今日信号是否生成**
+```bash
+today=$(date +%Y-%m-%d)
+if [ -f ~/.openclaw/workspace/intel/media-ops/DAILY-SIGNAL-BRIEF.md ]; then
+  grep -q "$today\|最后更新:" ~/.openclaw/workspace/intel/media-ops/DAILY-SIGNAL-BRIEF.md && echo SIGNAL_OK || echo SIGNAL_MISSING
+else
+  echo SIGNAL_MISSING
+fi
+```
+
+2. **今日计划是否存在**
+```bash
+[ -f ~/.openclaw/workspace/intel/media-ops/DAILY-PUBLISH-PLAN.md ] && echo PLAN_OK || echo PLAN_MISSING
+```
+
+3. **关键 cron 是否异常**
+重点检查：
+- `media-signal-morning`
+- `media-signal-noon`
+- `media-signal-evening`
+- `media-morning-planning`
+- `media-daily-retro`
+
+4. **是否有待晨星确认的积压交付**
+如果 `HOT-QUEUE.md` 中存在长时间停留在 `待确认` 的条目，应提醒晨星。
 
 ### TODO 跟进
 检查 `~/.openclaw/todo/` 目录下的活跃任务：
