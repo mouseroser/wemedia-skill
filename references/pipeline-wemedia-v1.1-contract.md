@@ -96,15 +96,34 @@ HALT_TIMEOUT = 10min
 - `R3` 仍 `REVISE` → `PUBLISH_WITH_NOTES`
 - 任意轮次 `REJECT` → HALT
 
-## 7) Step 5 生图规范
+## 7) Step 5 生图规范（NotebookLM 路线）
 
-- `nano-banana` 只负责生成图片 URL
-- `main` 负责下载与发送
-- `runTimeoutSeconds = 300`
+**首选：NotebookLM CLI**（全程 CLI，无需浏览器，2048x2048 正方形，中文原生）
+
+```bash
+notebooklm use <notebook-id>
+notebooklm source add <article.txt>
+notebooklm generate infographic \
+  --orientation square \
+  --style bento-grid \
+  --detail detailed \
+  --language zh_Hans \
+  "<自定义 prompt>"
+notebooklm artifact poll <task-id>
+notebooklm download infographic <task-id> --artifact <artifact-id> --force
+```
+
+- 图片保存路径：`agents/wemedia/drafts/generated/{A|B|C}/{文章标识}_infographic_sq.jpg`
+- 尺寸：2048x2048 原生正方形，无需裁剪
+- 语言代码：`zh_Hans`（简体）/ `zh_Hant`（繁体）
+- 下载后用 Python PIL 裁剪黑边，JPEG quality=95
+- 如 NotebookLM 不可用，降级为 nano-banana
+
+**备选：nano-banana**（Gemini 网页生图，仅降级使用）
 
 ## 8) Step 5.5 衍生内容
 
-- `notebooklm` 根据内容特征推荐并生成：podcast / mind-map / quiz / infographic
+- `notebooklm` 根据内容特征生成 podcast / mind-map / quiz（infographic 已归 Step 5）
 - L 级推荐，M 级可选
 
 ## 9) Step 6 多平台适配

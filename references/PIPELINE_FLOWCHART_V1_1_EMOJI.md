@@ -220,13 +220,13 @@
 
   ⛔ 未经晨星确认，绝不发布到外部平台
 
-  ✅ 晨星确认后 → main 调用 creator-ops 发布：
+  ✅ 晨星确认后 → main 调用 media-tools 发布：
 
     1. 读取 wemedia 交付内容（`drafts/{A|B|C}/{标识}.txt`）
     2. 读取配图路径（如有）
     3. 拼装 publish_pipeline 命令
        ```bash
-       cd ~/.openclaw/skills/creator-ops
+       cd ~/.openclaw/skills/media-tools
        python3 scripts/publish_pipeline.py \
          --title "标题" \
          --content "正文" \
@@ -237,7 +237,7 @@
     5. 记录帖子 ID 到监控群通知
 
 ═══════════════════════════════════════════════════════════
-  📦 Step 7.5 — main 调用 creator-ops 发布
+  📦 Step 7.5 — main 调用 media-tools 发布
   Executor: ☀️ main
 ═══════════════════════════════════════════════════════════
 
@@ -247,9 +247,9 @@
     • 标签（≤10个）
     • 配图路径
 
-  执行发布（调用 creator-ops）：
+  执行发布（调用 media-tools）：
     ```bash
-    cd ~/.openclaw/skills/creator-ops
+    cd ~/.openclaw/skills/media-tools
     python3 scripts/publish_pipeline.py \
       --title "..." --content "..." \
       --image-urls "..." \

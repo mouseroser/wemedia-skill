@@ -37,13 +37,13 @@ main 判断：
 - Claude Code：内容策略 / 执行计划
 - gemini：一致性复核
 - GPT：仅 L 级 / 高风险 / 明显分歧时做挑刺与仲裁
-- **NLM 知识查询（必做，M/L 级）**：基于 creator-ops 的 media-research notebook 查询竞品和行业数据，补充差异化角度
+- **NLM 知识查询（必做，M/L 级）**：基于 media-tools 的 media-research notebook 查询竞品和行业数据，补充差异化角度
   ```bash
   bash ~/.openclaw/skills/notebooklm/scripts/nlm-gateway.sh query \
     --agent main --notebook media-research \
     --query "基于竞品数据和行业趋势，{选题}的差异化角度是什么？有哪些爆款因素可以参考？"
   ```
-  > 来源：creator-ops 维护的 `media-research` notebook（`~/.openclaw/skills/notebooklm/scripts/nlm-gateway.sh`）
+  > 来源：media-tools 维护的 `media-research` notebook（`~/.openclaw/skills/notebooklm/scripts/nlm-gateway.sh`）
   > 频率：M/L 级内容必须查询，S 级跳过（时效优先）
 
 ### Step 3：内容创作
@@ -98,10 +98,10 @@ notebooklm download infographic <task-id> \
 - main 汇总交付
 - 未经确认绝不外发
 
-### Step 7.5：main 调用 creator-ops 发布
+### Step 7.5：main 调用 media-tools 发布
 - main 读取 wemedia 交付内容（`drafts/{A|B|C}/{标识}.txt`）
 - 读取配图路径，拼装 `publish_pipeline` 命令
-- 执行发布：`cd ~/.openclaw/skills/creator-ops && python3 scripts/publish_pipeline.py ...`
+- 执行发布：`cd ~/.openclaw/skills/media-tools && python3 scripts/publish_pipeline.py ...`
 - 成功：更新 HOT-QUEUE.md 状态 → ✅ 已发布，记录帖子 ID 到监控群
 - 失败：降级为手动发布（通知晨星介入）
 
