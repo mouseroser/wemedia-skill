@@ -80,11 +80,13 @@
 - ✅ PR #227 被关闭（测试未接入 npm test）
 - ✅ 4H 上游路线明确暂缓执行，本地方案继续演进
 
-#### Layer 3 稳定化
+#### Layer 3 稳定化 + 4F Spec-Kit
 - ✅ Layer 3 fallback 改为直调 nlm-gateway.sh（绕过 gateway lane lock）
 - ✅ L3 timeout 调高为 75 秒
 - ✅ 5 个 NotebookLM cron 脚本全面修复并验证
 - ✅ Layer 2 噪音过滤规则加固
+- ✅ 4F.1-4F.5 全部完成（超时/重试/截断/JSON防御/触发阈值），4F.6-4F.7 数据驱动跳过
+- ✅ 4E 观察期 8 天：L2 可用率 80%→87%，L3 从 0%→67%
 
 #### Skills 精修
 - ✅ notebooklm / starchain / wemedia / todo-manager skill 全部对齐当前架构
@@ -92,8 +94,10 @@
 #### 自媒体运营系统 v1.1 落地
 - ✅ 小红书方案 C+ 全链路验证（CDP 9223 + 独立 XiaohongshuProfiles）
 - ✅ NLM media-research notebook 重建（id: 032a95b5）
-- ✅ 3 篇小红书内容发布（OpenCode 三强 / Claude HUD / Agent 安全下篇）
-- ✅ NotebookLM infographic 生成能力验证（2048x2048 方图，全中文）
+- ✅ 累计 18 篇小红书内容发布，单日最高 12 条，爆款 Claude HUD 10K（690 观看/12.9% 互动率）
+- ✅ NotebookLM infographic 生成能力验证（2048x2048 方图，全中文，CLI 全自动）
+- ✅ 发现连发限流问题，建立 ≥30min 间隔规则
+- ✅ Agent 安全系列封存（数据差，不适合小红书受众）
 
 #### 硬性规则确认（3/20-21）
 - ✅ 小红书发布禁用 MiniMax，必须用 Opus/Sonnet
@@ -101,15 +105,21 @@
 - ✅ 操作类任务优先 GPT
 - ✅ 发布前必须查记忆踩坑 / 检查重复 / 验证标题 ≤20 字 / 标签 ≤10 个
 
+#### 基础设施
+- ✅ MiniMax 切换到国内版 api.minimaxi.com
+- ✅ web_search 修复（Brave Search 接管）
+- ✅ 停用 profile=openclaw，改用 profile="user" 连本机 Chrome
+
 ---
 
 ## 还有哪些空白
 
 ### 短期空白（1-2 周）
 - ⚠️ 星链流水线 v2.8 尚未完整执行验证
-- ⚠️ L2+L3 联动 7 天观察期（4E Day 4-7 尚未收尾，最终评估报告未完成）
 - ⚠️ 4H 上游路线暂缓执行（策略保留，等待合适时机重启）
-- ⚠️ 自媒体运营系统从"计划跑通"到"稳定高质量生产闭环"的衔接
+- ⚠️ 自媒体从"量产"到"稳定高质量生产闭环"的衔接（已验证量产能力，需建立质量标准）
+- ⚠️ gmncode.cn 代理残留清理（openclaw.json 第 69/138 行指向 52.7.156.79:19903）
+- ⚠️ gemini agent 通用模式缺陷修复验证
 
 ### 中期空白（1-3 个月）
 - ⚠️ enhanced_memory_recall 工具开发（L2→L3 自动降级）
@@ -124,21 +134,45 @@
 
 ---
 
-## 下一步计划
+## 本周重大事件（2026-03-16 ~ 2026-03-22）
 
-### 本周（2026-03-22 - 2026-03-28）
-1. **自媒体生产闭环稳定化**
-   - B/C 篇配图 NotebookLM infographic 生成并发布
-   - 运营 cron 首批自动扫描结果处理
-   - 建立稳定的"计划→创作→审查→发布"节奏
+### 微信 ClawBot 发布（2026-03-22）
+- 微信 8.0.70 推出官方 ClawBot 插件，支持 OpenClaw 接入微信
+- 这是国民级超级 App 首次官方支持 OpenClaw
+- 小红书首发"我的AI助手住进微信了"，先因配图问题删除后重发成功
+- **教训**：NotebookLM infographic 生图必须用临时 notebook（单一干净 source），否则历史内容干扰
 
-2. **4E 观察期收尾**
-   - Day 4-7 benchmark 完成
-   - 最终评估报告
+### 小红书账号受限（2026-03-22）
+- 根因：单日连发 15 篇 + CDP 自动化被检测
+- 违规原因：通过技术手段模拟用户操作
+- **强制规则确立**：单日≤3篇、间隔≥3小时、申诉期间暂停；main 有最高制止权
 
-3. **星链 v2.8 首次真实任务验证**
+### NotebookLM infographic 方案完善（2026-03-22）
+- 确认 `--json` 输出 task_id → `download infographic` 下载本地
+- 发现 notebook source 干扰问题，建立"临时 notebook + 单一干净 source"标准流程
+- 临时 notebook 用完即删
+
+### 硬规则确立
+- nanobanana → nanobanana 改名完成（openclaw.json + 6个核心文件）
+- wemedia 发布权下放（subagent 直接调用 publish_pipeline.py）
+- skills 推送 GitHub（wemedia + media-tools）
 
 ---
 
-**最后更新**: 2026-03-22 04:00 (珊瑚 记忆压缩维护)
+## 下一步计划
+
+### 明天（2026-03-23）
+1. **等小红书账号解除限制**（约 01:23 到期）
+2. **按新频率规则恢复发布**：单日≤3篇、间隔≥3小时
+3. **Gem Antigravity 初稿**生图 + 发布（标题待确认）
+4. **gmncode.cn 代理残留**清理（openclaw.json 第69/138行）
+
+### 本周（2026-03-23 - 2026-03-29）
+1. **自媒体生产闭环稳定化**：质量优先于数量，≥3小时间隔
+2. **星链 v2.8 首次真实任务验证**
+3. **基础设施清理**：gmncode.cn + gemini 通用模式
+
+---
+
+**最后更新**: 2026-03-22 23:50 (小光 周日维护)
 **下次回顾**: 2026-03-29（每周日）
