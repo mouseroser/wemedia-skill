@@ -14,8 +14,8 @@
 ### Step 0：持续研究层
 - gemini 负责早 / 午 / 晚三次扫描
 - 产出：
-  - `intel/media-ops/DAILY-SIGNAL-BRIEF.md`
-  - `intel/media-ops/HOT-SCAN-INBOX.md`
+  - `intel/media-tools/DAILY-SIGNAL-BRIEF.md`
+  - `intel/media-tools/HOT-SCAN-INBOX.md`
 
 ### Step 1：内容队列层
 - main 从收件箱拣选候选
