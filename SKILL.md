@@ -54,7 +54,7 @@ wemedia agent 完成创作后，必须输出以下标准格式，供 main 调用
 {正文内容，≤1000字}
 ```
 
-**保存位置**：`~/.openclaw/workspace/agents/wemedia/drafts/{A|B|C}/{标识}.txt`
+**保存位置**：`~/.openclaw/workspace/intel/collaboration/media/wemedia/drafts/{A|B|C}/{标识}.txt`
 
 **禁止**在正文中混入元信息。配图路径独立一行，由 main 决定是否传入 `--image-urls`。
 

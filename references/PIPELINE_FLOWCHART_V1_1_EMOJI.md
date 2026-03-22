@@ -162,12 +162,12 @@
 ═══════════════════════════════════════════════════════════
 
   使用 NotebookLM generate infographic 命令（square 方向，bento-grid 风格）
-  保存路径：`agents/wemedia/drafts/generated/{A|B|C}/{文章标识}_infographic_sq.jpg`
+  保存路径：`intel/collaboration/media/wemedia/drafts/generated/{A|B|C}/{文章标识}_infographic_sq.jpg`
   命令示例：
     notebooklm generate infographic --orientation square --style bento-grid \
       --detail detailed --language zh_Hans "内容摘要"
     notebooklm download infographic <task-id> --artifact <artifact-id> --force \
-      --output agents/wemedia/drafts/generated/{A|B|C}/{文章标识}_infographic_sq.jpg
+      --output intel/collaboration/media/wemedia/drafts/generated/{A|B|C}/{文章标识}_infographic_sq.jpg
 
   无配图需求 → 跳过
 

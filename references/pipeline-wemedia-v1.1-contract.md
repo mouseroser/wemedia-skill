@@ -113,7 +113,7 @@ notebooklm artifact poll <task-id>
 notebooklm download infographic <task-id> --artifact <artifact-id> --force
 ```
 
-- 图片保存路径：`agents/wemedia/drafts/generated/{A|B|C}/{文章标识}_infographic_sq.jpg`
+- 图片保存路径：`intel/collaboration/media/wemedia/drafts/generated/{A|B|C}/{文章标识}_infographic_sq.jpg`
 - 尺寸：2048x2048 原生正方形，无需裁剪
 - 语言代码：`zh_Hans`（简体）/ `zh_Hant`（繁体）
 - 下载后用 Python PIL 裁剪黑边，JPEG quality=95

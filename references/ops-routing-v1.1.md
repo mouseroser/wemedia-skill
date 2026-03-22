@@ -61,7 +61,7 @@ main 判断：
 
 ### Step 5：配图生成（NotebookLM 路线）✅
 - 使用 NotebookLM CLI 生成信息图（**首选路线**）
-- 生成后下载到 `agents/wemedia/drafts/generated/{A|B|C}/`
+- 生成后下载到 `intel/collaboration/media/wemedia/drafts/generated/{A|B|C}/`
 - ~~nano-banana 作为备选~~（已废弃，统一使用 NotebookLM）
 
 **NotebookLM 信息图生成标准命令**：
@@ -82,7 +82,7 @@ notebooklm download infographic <task-id> \
 - `--style bento-grid`：信息图风格
 - `--language zh_Hans`：简体中文
 - 下载后用 Python PIL 裁剪黑边，保存为 JPEG（quality=95）
-- 图片路径约定：`agents/wemedia/drafts/generated/{A|B|C}/{文章名}_infographic_sq.jpg`
+- 图片路径约定：`intel/collaboration/media/wemedia/drafts/generated/{A|B|C}/{文章名}_infographic_sq.jpg`
 
 **NotebookLM 语言代码**：`zh_Hans`（简体中文）/ `zh_Hant`（繁体中文）
 
