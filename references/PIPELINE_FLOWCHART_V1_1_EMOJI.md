@@ -157,14 +157,21 @@
 
 ═══════════════════════════════════════════════════════════
   🎨 Step 5 — 配图生成（可选）
-  Executor: 🎨 nano-banana
+  Executor: 🪸 notebooklm
   Orchestrator: ☀️ main
 ═══════════════════════════════════════════════════════════
 
-  有 prompts.md → spawn 生图 → main 下载并发送
+  使用 NotebookLM generate infographic 命令（square 方向，bento-grid 风格）
+  保存路径：`agents/wemedia/drafts/generated/{A|B|C}/{文章标识}_infographic_sq.jpg`
+  命令示例：
+    notebooklm generate infographic --orientation square --style bento-grid \
+      --detail detailed --language zh_Hans "内容摘要"
+    notebooklm download infographic <task-id> --artifact <artifact-id> --force \
+      --output agents/wemedia/drafts/generated/{A|B|C}/{文章标识}_infographic_sq.jpg
+
   无配图需求 → 跳过
 
-  📋 → 自媒体群 + 生图群 + 监控群
+  📋 → 自媒体群 + 监控群
 
 ═══════════════════════════════════════════════════════════
   🎭 Step 5.5 — 衍生内容生成（L 级推荐）
@@ -212,6 +219,51 @@
   → 晨星 (1099011886)
 
   ⛔ 未经晨星确认，绝不发布到外部平台
+
+  ✅ 晨星确认后 → main 调用 creator-ops 发布：
+
+    1. 读取 wemedia 交付内容（`drafts/{A|B|C}/{标识}.txt`）
+    2. 读取配图路径（如有）
+    3. 拼装 publish_pipeline 命令
+       ```bash
+       cd ~/.openclaw/skills/creator-ops
+       python3 scripts/publish_pipeline.py \
+         --title "标题" \
+         --content "正文" \
+         --image-urls "配图路径" \
+         --headless
+       ```
+    4. 发布成功后更新 HOT-QUEUE.md 状态为 ✅ 已发布
+    5. 记录帖子 ID 到监控群通知
+
+═══════════════════════════════════════════════════════════
+  📦 Step 7.5 — main 调用 creator-ops 发布
+  Executor: ☀️ main
+═══════════════════════════════════════════════════════════
+
+  main 从 wemedia 交付物读取：
+    • 标题（≤20字）
+    • 正文（≤1000字）
+    • 标签（≤10个）
+    • 配图路径
+
+  执行发布（调用 creator-ops）：
+    ```bash
+    cd ~/.openclaw/skills/creator-ops
+    python3 scripts/publish_pipeline.py \
+      --title "..." --content "..." \
+      --image-urls "..." \
+      --headless
+    ```
+
+  收尾动作：
+    • 更新 HOT-QUEUE.md 状态 → ✅ 已发布
+    • 记录帖子 ID → 监控群通知
+    • 触发 Step 8 日结（如需要）
+
+  失败降级：
+    • CDP 报错 → 降级为手动发布（晨星介入）
+    • 配图失败 → 询问晨星是否跳过配图继续发布
 
 ═══════════════════════════════════════════════════════════
   🏁 END

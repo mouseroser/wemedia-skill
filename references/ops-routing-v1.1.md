@@ -37,7 +37,14 @@ main 判断：
 - Claude Code：内容策略 / 执行计划
 - gemini：一致性复核
 - GPT：仅 L 级 / 高风险 / 明显分歧时做挑刺与仲裁
-- notebooklm：按需补专题知识，不是固定必经
+- **NLM 知识查询（必做，M/L 级）**：基于 creator-ops 的 media-research notebook 查询竞品和行业数据，补充差异化角度
+  ```bash
+  bash ~/.openclaw/skills/notebooklm/scripts/nlm-gateway.sh query \
+    --agent main --notebook media-research \
+    --query "基于竞品数据和行业趋势，{选题}的差异化角度是什么？有哪些爆款因素可以参考？"
+  ```
+  > 来源：creator-ops 维护的 `media-research` notebook（`~/.openclaw/skills/notebooklm/scripts/nlm-gateway.sh`）
+  > 频率：M/L 级内容必须查询，S 级跳过（时效优先）
 
 ### Step 3：内容创作
 - wemedia 产出主稿和配图提示词
@@ -52,11 +59,36 @@ main 判断：
 - R3 后仍不理想 → `PUBLISH_WITH_NOTES`
 - 任意轮 `REJECT` → HALT
 
-### Step 5：配图生成（可选）
-- nano-banana 按需生成配图
+### Step 5：配图生成（NotebookLM 路线）✅
+- 使用 NotebookLM CLI 生成信息图（**首选路线**）
+- 生成后下载到 `agents/wemedia/drafts/generated/{A|B|C}/`
+- ~~nano-banana 作为备选~~（已废弃，统一使用 NotebookLM）
 
-### Step 5.5：衍生内容（L 级优先）
-- notebooklm 推荐并生成 podcast / mind-map / quiz / infographic 等
+**NotebookLM 信息图生成标准命令**：
+```bash
+notebooklm use <notebook-id>                    # 切换 notebook
+notebooklm source add <article.txt>             # 添加正文 source
+notebooklm generate infographic \
+  --orientation square \
+  --style bento-grid \
+  --detail detailed \
+  --language zh_Hans \
+  "自定义 prompt，描述图片应包含的内容"   # 生成
+notebooklm artifact poll <task-id>               # 等待完成
+notebooklm download infographic <task-id> \
+  --artifact <artifact-id> --force              # 下载
+```
+- `--orientation square`：1:1 正方形（小红书最佳）
+- `--style bento-grid`：信息图风格
+- `--language zh_Hans`：简体中文
+- 下载后用 Python PIL 裁剪黑边，保存为 JPEG（quality=95）
+- 图片路径约定：`agents/wemedia/drafts/generated/{A|B|C}/{文章名}_infographic_sq.jpg`
+
+**NotebookLM 语言代码**：`zh_Hans`（简体中文）/ `zh_Hant`（繁体中文）
+
+### Step 5.5：衍生内容（其他格式，L 级优先）
+- notebooklm 生成 podcast / mind-map / quiz 等（非信息图类）
+- infographic 已归入 Step 5
 
 ### Step 6：平台适配 + 排期
 - 当前默认输出 `xiaohongshu.md`
@@ -66,14 +98,21 @@ main 判断：
 - main 汇总交付
 - 未经确认绝不外发
 
+### Step 7.5：main 调用 creator-ops 发布
+- main 读取 wemedia 交付内容（`drafts/{A|B|C}/{标识}.txt`）
+- 读取配图路径，拼装 `publish_pipeline` 命令
+- 执行发布：`cd ~/.openclaw/skills/creator-ops && python3 scripts/publish_pipeline.py ...`
+- 成功：更新 HOT-QUEUE.md 状态 → ✅ 已发布，记录帖子 ID 到监控群
+- 失败：降级为手动发布（通知晨星介入）
+
 ### Step 8：日结 / 周复盘
 - main 记录当天运营结论和后续动作
 
 ## 分级路由
 
-- **S 级**：Step 1.5 → Step 3 → Step 4（轻审）→ Step 6 → Step 7
-- **M 级**：Step 1.5 → Step 2 → Step 3 → Step 4 → Step 6 → Step 7
-- **L 级**：Step 1.5 → Step 2（+ GPT 仲裁）→ Step 3 → Step 4 → Step 5.5（按需）→ Step 6 → Step 7
+- **S 级**：Step 1.5 → Step 3 → Step 4（轻审）→ Step 6 → Step 7 → **Step 7.5** → Step 8
+- **M 级**：Step 1.5 → Step 2 → Step 3 → Step 4 → Step 6 → Step 7 → **Step 7.5** → Step 8
+- **L 级**：Step 1.5 → Step 2（+ GPT 仲裁）→ Step 3 → Step 4 → Step 5.5（按需）→ Step 6 → Step 7 → **Step 7.5** → Step 8
 
 说明：
 - Step 0 / Step 1 属于持续运营层，通常在生产前已完成
