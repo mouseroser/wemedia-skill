@@ -28,6 +28,10 @@
     "weather": {
       "version": "1.0.0",
       "installedAt": 1773211622322
+    },
+    "twitter-web-autopost": {
+      "version": "0.1.0",
+      "installedAt": 1773889510824
     }
   }
 }

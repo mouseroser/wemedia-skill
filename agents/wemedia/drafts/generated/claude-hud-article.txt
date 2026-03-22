@@ -1,0 +1,9 @@
+你有没有遇到过这种感觉：把任务丢给 Claude Code，然后就什么都不知道了。是在思考？还是在读文件？有没有跑偏？光标一直在闪，但你完全不知道它在干嘛。这种黑盒感是 Coding Agent 最大的痛点之一。
+
+Claude HUD 就是为了解决这个问题。它是一个 Claude Code 插件，在你的终端底部固定显示一条状态栏，实时告诉你它现在在读哪个文件、正在执行什么命令、整体任务进度到哪步了、已经跑了多久。
+
+具体能看到：Context 健康度进度条、Tool 活动列表（读文件/grope/编辑）、Agent 状态（哪个 subagent 在跑、做什么事、跑了多久）、Todo 进度（任务完成数）、Token 速度。300ms 刷新一次，数据来自原生 API。
+
+安装方法：VSCode 中 /plugin marketplace add jarrodwatts/claude-hud，然后 /plugin install claude-hud，最后 /claude-hud:setup，重启 Claude Code 即可。
+
+与 OpenClaw 的 session 监控互补：Claude HUD 解决单会话内的实时透视，OpenClaw 解决跨 session 跨设备的状态追踪。GitHub 10.5k stars，持续更新，社区活跃。

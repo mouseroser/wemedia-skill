@@ -754,3 +754,131 @@ Shrink the prompt scope, reduce required file reads, bias toward lightweight syn
 - See Also: ERR-20260318-002
 
 ---
+
+### 2026-03-19 creator-ops CDP 连接问题
+- **问题**: macOS Chrome 用 `--remote-debugging-port=9222` 启动后绑定到 IPv6 `[::1]:9222`，但脚本默认连 `127.0.0.1:9222`（IPv4），导致 404
+- **修复**: 将 `cdp_publish.py` 的 `CDP_HOST` 从 `"127.0.0.1"` 改为 `"localhost"`
+- **问题2**: 小红书创作者中心 (`creator.xiaohongshu.com`) 和主站 (`www.xiaohongshu.com`) 是独立登录态，需要分别扫码
+- **问题3**: `cdp_publish.py` 的 `--headless` 是全局参数，必须放在子命令前面（`--headless check-login`），不能放后面
+- **影响**: creator-ops skill
+- **状态**: ✅ 已修复
+
+### 2026-03-19 publish_pipeline.py 也有 127.0.0.1 硬编码
+- **问题**: cdp_publish.py 修了 CDP_HOST，但 publish_pipeline.py 的 argparse default 也硬编码了 127.0.0.1
+- **修复**: 同样改为 `localhost`
+- **教训**: 同一个项目多个入口文件可能有相同的硬编码，修一处不够，要 grep 全局检查
+- **状态**: ✅ 已修复
+
+### 2026-03-19 NLM media-research notebook 已失效
+- **问题**: notebooks.json 中的 media-research ID (cfb2b01d) 指向的 notebook 不在 notebooklm list 中，可能已被清理/过期
+- **修复**: 新建 notebook (032a95b5)，更新 notebooks.json
+- **教训**: NLM notebook 可能会意外失效，应定期用 `notebooklm list` 验证
+- **状态**: ✅ 已修复
+
+### 2026-03-19 chrome_launcher is_port_open IPv4 检测失败
+- **问题**: macOS Chrome 用 `--remote-debugging-port` 绑定到 IPv6 `[::1]:9222`，但 `is_port_open()` 用 IPv4 `AF_INET` 检测，连接被拒但 Chrome 实际在跑 → launcher 误判"Chrome 已在跑"不启动，脚本连不上
+- **修复**: 改为 IPv6 `AF_INET6` 检测，macOS 上 `AF_INET6` 可以同时连接 IPv6 和 IPv4 地址
+- **macOS 特殊性**: macOS 的 `AF_INET6` 是 dual-stack，connect 时会自动选择；Linux 上则需要 `AF_UNSPEC`
+- **状态**: ✅ 已修复 chrome_launcher.py
+
+### 2026-03-19 CDP 端口 9222 被主 Chrome 占用
+- **问题**: 晨星的主 Chrome (PID 637) 已经监听 9222 (teamcoherence 协议)，XiaohongshuProfiles 的 Chrome 启动时报 `bind() failed: Address already in use`
+- **根因**: macOS 上 Chrome 单实例，同一个 profile 不能并行；但用不同 `--user-data-dir` 可以启动多个实例，只是调试端口必须不同
+- **修复**: 将 creator-ops 脚本的 CDP_PORT 从 9222 改为 9223，chrome_launcher 启动到 9223，主 Chrome 的 9222 不冲突
+- **副作用**: 两个 Chrome 实例现在各自用独立端口（9222 主 Chrome / 9223 小红书），不影响使用
+- **状态**: ✅ 已修复（cdp_publish.py + chrome_launcher.py + publish_pipeline.py 全部改为 CDP_PORT=9223）
+
+### 2026-03-19 小红书标题字数限制 + CDP 发布按钮点击问题
+- **标题限制**: 小红书标题最多 20 个字，原标题 26 字被截断导致无法发布
+- **CDP 按钮点击**: `cdp_publish.py` 报 `PUBLISH_STATUS: PUBLISHED` 但实际未发布。根因待查（可能坐标偏移或弹窗拦截），第二次重试后成功
+- **教训**: (1) 标题生成时必须控制在 20 字以内 (2) 发布后应验证页面 URL 是否跳转到笔记管理页（而不是仍在编辑页）
+- **状态**: 标题问题已知，按钮点击问题需后续修复 cdp_publish.py 添加发布后验证逻辑
+
+### 2026-03-19 nano-banana 模型名
+- `google/gemini-3-pro-image-preview` 不可用（model not allowed），正确名称是 `google/gemini-3.1-pro-image-preview`（NanobananaPro）
+- 默认模型 `google/gemini-3.1-flash-image-preview`（Nanobanana2）效果反而更好
+## [ERR-20260321-001] web-search-gemini-unsupported-filters
+
+**Logged**: 2026-03-21T05:25:00Z
+**Priority**: low
+**Status**: pending
+**Area**: web
+
+### Summary
+在当前 gemini provider 下调用 `web_search` 时，误传了 `country` 和 `language` 参数，导致工具直接返回 unsupported filter 错误。
+
+### Error
+```text
+unsupported_country
+unsupported_language
+Only Brave and Perplexity support country/language filtering.
+```
+
+### Context
+- Operation attempted: daily AI/Agent/LLM signal scan
+- Initial parameters included: `country: "US"`, `language: "en"`
+- Actual provider behavior: gemini provider rejects these filters instead of ignoring them
+
+### Suggested Fix
+在不确定底层 provider 时，先使用最小兼容参数集（query/count/freshness/date_after/date_before）。只有确认 provider 支持时再加 `country` 或 `language`。
+
+### Metadata
+- Reproducible: yes
+- Related Files: n/a
+- See Also: none
+
+---
+
+## [ERR-20260319-001] creator-ops-path-drift
+
+**Logged**: 2026-03-19T13:02:00Z
+**Priority**: medium
+**Status**: pending
+**Area**: config
+
+### Summary
+creator-ops skill 文档中的小红书脚本目录仍指向 ~/.openclaw/skills/xiaohongshu-unified，但实际脚本已迁移到 ~/.openclaw/skills/creator-ops/scripts。
+
+### Error
+```
+zsh:cd:1: no such file or directory: /Users/lucifinil_chen/.openclaw/skills/xiaohongshu-unified
+```
+
+### Context
+- Command attempted: cd ~/.openclaw/skills/xiaohongshu-unified && python3 scripts/cdp_publish.py content-data --csv-file /tmp/xhs_data.csv
+- Resolved path: ~/.openclaw/skills/creator-ops/scripts/cdp_publish.py
+- Impact: cron task would fail until path is corrected manually or in skill docs.
+
+### Suggested Fix
+更新 ~/.openclaw/skills/creator-ops/SKILL.md 中所有 xiaohongshu-unified 路径，统一改为 creator-ops 实际目录，避免后续 cron 任务继续踩坑。
+
+### Metadata
+- Reproducible: yes
+- Related Files: /Users/lucifinil_chen/.openclaw/skills/creator-ops/SKILL.md
+
+---
+
+## 2026-03-19 21:28 - 事实核查过度泛化导致误判
+
+**问题**: 晨星提出黄仁勋 CNBC 采访称 OpenClaw 是"下一个 ChatGPT"的选题，小光两次拒绝发布，判定为假消息。
+
+**根因**: 推理错误——过度泛化（不是搜索范围问题）
+1. YouTube 视频标题混淆了 OpenShell 和 OpenClaw → 正确判定该视频有误
+2. 错误地将"来源A有误"泛化为"所有黄仁勋+OpenClaw说法都是假的"
+3. CNBC 采访是独立来源，Jensen 确实在采访中说了 OpenClaw 是"下一个 ChatGPT"
+4. 第三次搜索用更精准关键词才找到
+
+**修复**:
+- persona.md 新增「事实核查规则」4 条：
+  1. 每个来源独立验证（来源A有误 ≠ 所有相关说法都有误）
+  2. 不凭知识截止日期否定用户来源
+  3. 多关键词多来源搜索
+  4. 名人背书必须验证原文
+- memory_store 已记录
+
+### Metadata
+- Severity: HIGH（连续两次错误拒绝用户合理请求）
+- Reproducible: yes（任何知识截止后的真实事件都可能触发）
+- Related Files: ~/.openclaw/skills/creator-ops/persona.md
+
+---

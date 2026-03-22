@@ -1,6 +1,6 @@
 # MEMORY.md - 小光的长期记忆
 
-> 精简版 (2026-03-15)。完整历史备份：`memory/archive/MEMORY-2026-03-14-before.md`
+> 精简版 (2026-03-22)。完整历史备份：`memory/archive/MEMORY-2026-03-14-before.md`
 > 踩坑笔记完整版已存入 memory-lancedb-pro 向量数据库，按需召回。
 
 ---
@@ -64,7 +64,7 @@
 | coding | - | -5039283416 |
 | brainstorming | - | -5231604684 |
 | wemedia | - | -5146160953 |
-| nano-banana | - | -5217509070 |
+| nanobanana | - | -5217509070 |
 | gemini | 织梦 | -5264626153 |
 | notebooklm | 珊瑚 | -5202217379 |
 | claude | 小克 | -5101947063 |
@@ -141,6 +141,35 @@
 
 ## 上游 PR 跟进
 
-- **PR #206** (feat/layer3-notebooklm-fallback): CLEAN + MERGEABLE，等待 maintainer 审批（checks: version-sync ✅, cli-smoke ✅, claude-review 按 fork PR 规则跳过）
 - **PR #210** (fix/skip-claude-review-on-fork-prs): ✅ 已合并 (2026-03-15)
+- **PR #206** (feat/layer3-notebooklm-fallback): CLEAN + MERGEABLE，等待 maintainer 审批（checks: version-sync ✅, cli-smoke ✅, claude-review 按 fork PR 规则跳过）
 - Cron `check-memory-lancedb-pr-status` 每天 09:00 自动检查状态
+
+---
+
+## 本周重大事件（2026-03-16 ~ 2026-03-22）
+
+### 自媒体 NotebookLM 信息图路线探索成功（03-22）
+- NotebookLM CLI 原生支持 `generate infographic`，`--orientation square` 输出 2048x2048 正方形
+- 命令：`notebooklm generate infographic --orientation square --style bento-grid --detail detailed --language zh_Hans "<prompt>"`
+- 全程 CLI，无需浏览器，绕过 Gemini 下载不落盘问题
+- 语言代码：`zh_Hans`（简体）/ `zh_Hant`（繁体）
+- 路径约定：`agents/wemedia/drafts/generated/{A|B|C}/{文章标识}_infographic_sq.jpg`
+- 流水线已更新：Step 5 从 nanobanana 改为 NotebookLM，nanobanana 降为备选
+
+### 自媒体三篇小红书配图更新（03-21/22）
+- A 篇（OpenCode 三强格局）：封面 + 信息图 v2 + 三栏对比
+- B 篇（Claude HUD）：信息图 + 功能展示
+- C 篇（Agent安全下篇）：信息图 v2 + 三层框架
+
+### 自媒体 24/7 运营系统 v1 方案确立（03-18）
+- 基于 Shubham Saboo X 文章的四层升级方案
+- 角色映射：main=总编排, gemini=快速研究, notebooklm=深度研究, wemedia=创作
+
+### Layer 3 NotebookLM fallback 稳定化（03-16/17）
+- 根因：Ollama API IPv4/IPv6 混合 + `--session-id` 不稳定
+- 修复：`nlm-gateway.sh` 改用 `nlm-ask` 内部函数绕过 session 问题
+- 验证：链路已通，剩余 45s 偶发超时非 session lock
+
+### 黄仁勋 GTC 选题（03-19）
+- 成功完成系列内容生产

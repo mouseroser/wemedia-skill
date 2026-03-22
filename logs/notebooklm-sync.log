@@ -42,3 +42,12 @@
 - 跳过文件数: 0 (超过 4 周)
 - 额外文件数: 0
 - 目标目录: /Users/lucifinil_chen/.openclaw/workspace/openclaw-docs/troubleshooting/memory-archive
+[2026-03-15 04:05:40] 开始同步记忆文件到 NotebookLM staging...
+保留日期范围: 2026-02-15 至今
+已同步 MEMORY.md
+已同步 reflections 目录
+[2026-03-15 04:05:40] 同步完成
+- 同步文件数: 41
+- 跳过文件数: 0 (超过 4 周)
+- 额外文件数: 0
+- 目标目录: /Users/lucifinil_chen/.openclaw/workspace/openclaw-docs/troubleshooting/memory-archive

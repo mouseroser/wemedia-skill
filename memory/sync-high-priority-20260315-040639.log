@@ -1,0 +1,6 @@
+[2026-03-15 04:06:39] 开始高优先级记忆同步
+[2026-03-15 04:06:39] 查询 importance >= 0.9 的记忆...
+[2026-03-15 04:06:39] 找到 143 条高优先级记忆
+[2026-03-15 04:06:39] 已生成同步文档: /Users/lucifinil_chen/.openclaw/workspace/.tmp/high-priority-sync-20260315-040639.md
+[2026-03-15 04:06:39] 将同步文档纳入 Memory Archive staging...
+bash: /Users/lucifinil_chen/.openclaw/workspace/scripts/sync-memory-to-notebooklm.sh: No such file or directory

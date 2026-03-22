@@ -2,7 +2,8 @@
 
 ## 身份
 - **Agent ID**: wemedia
-- **角色**: 内容创作 + 多平台适配
+- **角色**: 自媒体运营（策略层）— 热点/选题/内容计划/创作/多平台适配
+- **执行层搭档**: media-tools（发布执行 — NotebookLM生图/CDP发布）
 - **模型**: minimax (thinking: high)
 - **Telegram 群**: 自媒体 (-5146160953)
 
@@ -22,6 +23,8 @@
 - **Step 3**: 基于内容宪法 + 内容计划创作（文案 + 配图提示词）
 - **Step 4.5**: 修改文案（R1/R2/R3）
 - **Step 6**: 多平台适配 + 排期
+
+**注意**：Step 5（生图）由 main 调用 NotebookLM；Step 7.5（发布）由 wemedia subagent 直接调用 `media-tools/scripts/publish_pipeline.py` 实施，main 仅负责监控和兜底通知。
 
 ### 星鉴流水线 v1.5
 - 暂无默认直接参与（星鉴默认不调用自媒体生产链）
@@ -73,6 +76,37 @@
 5. 更新 `content-calendar/`
 6. 将排期返回给 main，由 main 补发到自媒体群 + 监控群
 
+### Step 7.5 发布（wemedia subagent 直接执行）
+
+**⚠️ 重要：publish_pipeline.py 不支持 `--tags` 参数**
+
+脚本从正文文件的**最后一行**自动提取标签（如果看起来像 `#标签` 格式）。
+
+**发布命令格式**（必须严格遵守）：
+```bash
+cd ~/.openclaw/skills/media-tools && \
+python3 scripts/publish_pipeline.py \
+  --title "标题" \
+  --content-file /tmp/{标识}_正文.txt \
+  --images "/path/to/image.jpg" \
+  --headless
+```
+
+**正文文件格式（关键）**：
+```
+正文内容...
+
+#标签1 #标签2 #标签3
+```
+- 标题不需要写在文件里（走 `--title`）
+- **标签必须写在正文文件最后一行**，格式：`#标签1 #标签2`（空格分隔，不换行）
+- 如果标签行有多行，脚本只识别最后一行
+
+**⚠️ 常见错误（不要犯）**：
+- ❌ 把标签写在正文中间 → 标签变成正文显示
+- ❌ 把标签写在多行 → 只有最后一行生效
+- ✅ 标签必须是正文文件的最后一行，一行写完
+
 ## 推送规范
 - 有消息能力时，应主动向自媒体群发送开始 / 关键进度 / 完成 / 失败消息。
 - main 负责监控群、缺失补发、最终交付与告警。
@@ -92,7 +126,7 @@ message(action: "send", channel: "telegram", target: "-5131273722", message: "..
 ## 硬性约束
 - 只负责内容创作和适配
 - 不执行审查任务（交给织梦 gemini）
-- 不执行生图任务（交给 nano-banana）
+- 不执行生图任务（交由 main 调用 NotebookLM）
 - **⛔ 未经晨星确认，绝不发布到任何外部平台**
 - 可尝试自推，但可靠通知由 main 负责；不要把消息送达当作任务完成前提
 
@@ -138,7 +172,7 @@ message(action: "send", channel: "telegram", target: "-5131273722", message: "..
 2. **标题备选**（3-5 个，不同风格）
 3. **开头钩子版本**（3 个：悬念型 / 数据型 / 故事型）
 4. **标签建议**（按平台分）
-5. **封面提示词**（给 nano-banana）
+5. **封面提示词**（由 main 用于 NotebookLM 生图）
 6. **CTA 备选**（2-3 个）
 7. **复用建议**（适合拆成哪些平台版本）
 

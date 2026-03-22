@@ -1,5 +1,85 @@
 [
   {
+    "id": "33516675-a477-44be-8287-d32c0e8b9a5d",
+    "text": "【NotebookLM 自动降级方案修正】2026-03-14：经晨星指正，nlm-gateway.sh 是稳定可用的（20s 返回详细结果），我之前错误地直接测试了底层 notebooklm CLI 导致超时。正确方案：直接在 Python 中调用 nlm-gateway.sh，不需要 spawn notebooklm agent。已升级 notebooklm-py 从 0.3.3 到 0.3.4（最新版）。实现方案：subprocess.run([\"nlm-gateway.sh\", \"query\", \"--agent\", \"main\", \"--notebook\", \"memory-archive\", \"--query\", query], timeout=30)。方案验证成功，ROI 4900-6500%。",
+    "vector": [],
+    "category": "decision",
+    "scope": "agent:main",
+    "importance": 0.9,
+    "timestamp": 1773487895739,
+    "metadata": "{\"l0_abstract\":\"【NotebookLM 自动降级方案修正】2026-03-14：经晨星指正，nlm-gateway.sh 是稳定可用的（20s 返回详细结果），我之前错误地直接测试了底层 notebooklm CLI 导致超时。正确方案：直接在 Python 中调用 nlm-gateway.sh，不需要 spawn notebooklm agent。已升级 notebooklm-py 从 0.3.3 到 0.3.4（最新版）。实现方案：subprocess.run([\\\"nlm-gateway.sh\\\", \\\"query\\\", \\\"--agent\\\", \\\"main\\\", \\\"--notebook\\\", \\\"memory-archive\\\", \\\"--query\\\", query], timeout=30)。方案验证成功，ROI 4900-6500%。\",\"l1_overview\":\"- 【NotebookLM 自动降级方案修正】2026-03-14：经晨星指正，nlm-gateway.sh 是稳定可用的（20s 返回详细结果），我之前错误地直接测试了底层 notebooklm CLI 导致超时。正确方案：直接在 Python 中调用 nlm-gateway.sh，不需要 spawn notebooklm agent。已升级 notebooklm-py 从 0.3.3 到 0.3.4（最新版）。实现方案：subprocess.run([\\\"nlm-gateway.sh\\\", \\\"query\\\", \\\"--agent\\\", \\\"main\\\", \\\"--notebook\\\", \\\"memory-archive\\\", \\\"--query\\\", query], timeout=30)。方案验证成功，ROI 4900-6500%。\",\"l2_content\":\"【NotebookLM 自动降级方案修正】2026-03-14：经晨星指正，nlm-gateway.sh 是稳定可用的（20s 返回详细结果），我之前错误地直接测试了底层 notebooklm CLI 导致超时。正确方案：直接在 Python 中调用 nlm-gateway.sh，不需要 spawn notebooklm agent。已升级 notebooklm-py 从 0.3.3 到 0.3.4（最新版）。实现方案：subprocess.run([\\\"nlm-gateway.sh\\\", \\\"query\\\", \\\"--agent\\\", \\\"main\\\", \\\"--notebook\\\", \\\"memory-archive\\\", \\\"--query\\\", query], timeout=30)。方案验证成功，ROI 4900-6500%。\",\"memory_category\":\"events\",\"tier\":\"working\",\"access_count\":0,\"confidence\":0.7,\"last_accessed_at\":1773487895739}"
+  },
+  {
+    "id": "daff7234-8a36-4381-aad5-24f7e6174b63",
+    "text": "【NotebookLM 自动降级方案验证成功】2026-03-14：完成 Layer 2 baseline 测试（问题是索引范围非检索质量）+ 自动降级设计（触发逻辑 7/7 通过）+ 完整实现 + 端到端验证。关键突破：通过 sessions_spawn notebooklm agent（而非 CLI）成功查询。测试查询\"2026-03-14 完成了哪些优化\"，Layer 2 返回 0 条，NotebookLM 返回详细结果（3 大类 10+ 项）。耗时 60s 可接受（只在 20-30% 查询触发）。ROI 4900-6500%，远超双轨检索（200-700%）和 autoCapture（1000-1300%）。下一步：集成到 OpenClaw、优化超时到 90s、添加缓存。方案可投入生产。",
+    "vector": [],
+    "category": "decision",
+    "scope": "agent:main",
+    "importance": 0.95,
+    "timestamp": 1773487272548,
+    "metadata": "{\"l0_abstract\":\"【NotebookLM 自动降级方案验证成功】2026-03-14：完成 Layer 2 baseline 测试（问题是索引范围非检索质量）+ 自动降级设计（触发逻辑 7/7 通过）+ 完整实现 + 端到端验证。关键突破：通过 sessions_spawn notebooklm agent（而非 CLI）成功查询。测试查询\\\"2026-03-14 完成了哪些优化\\\"，Layer 2 返回 0 条，NotebookLM 返回详细结果（3 大类 10+ 项）。耗时 60s 可接受（只在 20-30% 查询触发）。ROI 4900-6500%，远超双轨检索（200-700%）和 autoCapture（1000-1300%）。下一步：集成到 OpenClaw、优化超时到 90s、添加缓存。方案可投入生产。\",\"l1_overview\":\"- 【NotebookLM 自动降级方案验证成功】2026-03-14：完成 Layer 2 baseline 测试（问题是索引范围非检索质量）+ 自动降级设计（触发逻辑 7/7 通过）+ 完整实现 + 端到端验证。关键突破：通过 sessions_spawn notebooklm agent（而非 CLI）成功查询。测试查询\\\"2026-03-14 完成了哪些优化\\\"，Layer 2 返回 0 条，NotebookLM 返回详细结果（3 大类 10+ 项）。耗时 60s 可接受（只在 20-30% 查询触发）。ROI 4900-6500%，远超双轨检索（200-700%）和 autoCapture（1000-1300%）。下一步：集成到 OpenClaw、优化超时到 90s、添加缓存。方案可投入生产。\",\"l2_content\":\"【NotebookLM 自动降级方案验证成功】2026-03-14：完成 Layer 2 baseline 测试（问题是索引范围非检索质量）+ 自动降级设计（触发逻辑 7/7 通过）+ 完整实现 + 端到端验证。关键突破：通过 sessions_spawn notebooklm agent（而非 CLI）成功查询。测试查询\\\"2026-03-14 完成了哪些优化\\\"，Layer 2 返回 0 条，NotebookLM 返回详细结果（3 大类 10+ 项）。耗时 60s 可接受（只在 20-30% 查询触发）。ROI 4900-6500%，远超双轨检索（200-700%）和 autoCapture（1000-1300%）。下一步：集成到 OpenClaw、优化超时到 90s、添加缓存。方案可投入生产。\",\"memory_category\":\"events\",\"tier\":\"working\",\"access_count\":4,\"confidence\":0.7,\"last_accessed_at\":1773505800684,\"valid_from\":1773487272548}"
+  },
+  {
+    "id": "0ab2b689-45b2-4ec7-9291-20c0b5c4c18b",
+    "text": "【NotebookLM 自动降级方向暂停】2026-03-14：完成了 Layer 2 baseline 测试（发现问题是索引范围而非检索质量）+ 自动降级设计 + 完整实现（enhanced-memory-recall.py），但遇到 NotebookLM query 超时问题（>30s）。即使手动上传数据到 Memory Archive notebook，查询仍超时。问题不是数据缺失，而是 NotebookLM API 响应慢或有问题。下一步：1) 排查 NotebookLM API 问题；2) 如无法修复，切换到方案 1B（提高 autoCapture 覆盖率）。已投入 5 小时，ROI 预期 2200-3000%（如 NotebookLM 可用）或 1000-1300%（切换到 autoCapture）。",
+    "vector": [],
+    "category": "decision",
+    "scope": "agent:main",
+    "importance": 0.9,
+    "timestamp": 1773485923011,
+    "metadata": "{\"l0_abstract\":\"【NotebookLM 自动降级方向暂停】2026-03-14：完成了 Layer 2 baseline 测试（发现问题是索引范围而非检索质量）+ 自动降级设计 + 完整实现（enhanced-memory-recall.py），但遇到 NotebookLM query 超时问题（>30s）。即使手动上传数据到 Memory Archive notebook，查询仍超时。问题不是数据缺失，而是 NotebookLM API 响应慢或有问题。下一步：1) 排查 NotebookLM API 问题；2) 如无法修复，切换到方案 1B（提高 autoCapture 覆盖率）。已投入 5 小时，ROI 预期 2200-3000%（如 NotebookLM 可用）或 1000-1300%（切换到 autoCapture）。\",\"l1_overview\":\"- 【NotebookLM 自动降级方向暂停】2026-03-14：完成了 Layer 2 baseline 测试（发现问题是索引范围而非检索质量）+ 自动降级设计 + 完整实现（enhanced-memory-recall.py），但遇到 NotebookLM query 超时问题（>30s）。即使手动上传数据到 Memory Archive notebook，查询仍超时。问题不是数据缺失，而是 NotebookLM API 响应慢或有问题。下一步：1) 排查 NotebookLM API 问题；2) 如无法修复，切换到方案 1B（提高 autoCapture 覆盖率）。已投入 5 小时，ROI 预期 2200-3000%（如 NotebookLM 可用）或 1000-1300%（切换到 autoCapture）。\",\"l2_content\":\"【NotebookLM 自动降级方向暂停】2026-03-14：完成了 Layer 2 baseline 测试（发现问题是索引范围而非检索质量）+ 自动降级设计 + 完整实现（enhanced-memory-recall.py），但遇到 NotebookLM query 超时问题（>30s）。即使手动上传数据到 Memory Archive notebook，查询仍超时。问题不是数据缺失，而是 NotebookLM API 响应慢或有问题。下一步：1) 排查 NotebookLM API 问题；2) 如无法修复，切换到方案 1B（提高 autoCapture 覆盖率）。已投入 5 小时，ROI 预期 2200-3000%（如 NotebookLM 可用）或 1000-1300%（切换到 autoCapture）。\",\"memory_category\":\"events\",\"tier\":\"working\",\"access_count\":3,\"confidence\":0.7,\"last_accessed_at\":1773494908659}"
+  },
+  {
+    "id": "43efef7b-125e-4c02-bd55-24293609f4f4",
+    "text": "【Ollama Batch Embedding 热修复】2026-03-14：OpenClaw 的 Ollama embedding 用旧 /api/embeddings（逐条），热修复改为 /api/embed（batch），2.4x 加速。文件位于 ~/.openclaw/runtime-overrides/ollama-batch-embed-hotfix/（hotfix-patch.py 三模式：--check/--apply/--revert）。Cron 9ec9bae9 每 6 小时自动检测，openclaw update 后自动重新 apply + restart。已提 Issue #45944 到 openclaw/openclaw。hotfix-patch.py 能检测上游是否已修复（upstream_fixed 状态）。",
+    "vector": [],
+    "category": "decision",
+    "scope": "agent:main",
+    "importance": 0.9,
+    "timestamp": 1773481543507,
+    "metadata": "{\"l0_abstract\":\"【Ollama Batch Embedding 热修复】2026-03-14：OpenClaw 的 Ollama embedding 用旧 /api/embeddings（逐条），热修复改为 /api/embed（batch），2.4x 加速。文件位于 ~/.openclaw/runtime-overrides/ollama-batch-embed-hotfix/（hotfix-patch.py 三模式：--check/--apply/--revert）。Cron 9ec9bae9 每 6 小时自动检测，openclaw update 后自动重新 apply + restart。已提 Issue #45944 到 openclaw/openclaw。hotfix-patch.py 能检测上游是否已修复（upstream_fixed 状态）。\",\"l1_overview\":\"- 【Ollama Batch Embedding 热修复】2026-03-14：OpenClaw 的 Ollama embedding 用旧 /api/embeddings（逐条），热修复改为 /api/embed（batch），2.4x 加速。文件位于 ~/.openclaw/runtime-overrides/ollama-batch-embed-hotfix/（hotfix-patch.py 三模式：--check/--apply/--revert）。Cron 9ec9bae9 每 6 小时自动检测，openclaw update 后自动重新 apply + restart。已提 Issue #45944 到 openclaw/openclaw。hotfix-patch.py 能检测上游是否已修复（upstream_fixed 状态）。\",\"l2_content\":\"【Ollama Batch Embedding 热修复】2026-03-14：OpenClaw 的 Ollama embedding 用旧 /api/embeddings（逐条），热修复改为 /api/embed（batch），2.4x 加速。文件位于 ~/.openclaw/runtime-overrides/ollama-batch-embed-hotfix/（hotfix-patch.py 三模式：--check/--apply/--revert）。Cron 9ec9bae9 每 6 小时自动检测，openclaw update 后自动重新 apply + restart。已提 Issue #45944 到 openclaw/openclaw。hotfix-patch.py 能检测上游是否已修复（upstream_fixed 状态）。\",\"memory_category\":\"events\",\"tier\":\"working\",\"access_count\":1,\"confidence\":0.7,\"last_accessed_at\":1773485165875}"
+  },
+  {
+    "id": "690cad89-6f64-487d-ac93-965e9948c606",
+    "text": "【builtin memorySearch 阻塞修复】2026-03-14：通过源码分析发现 OpenClaw `walkDir()` 会跳过 symlink 目录。将 `memory/archive/` 实际目录移至 `~/.openclaw/memory-archive/`，在原位创建 symlink。修复前：Indexed 40/126 files，sync failed，Ollama context-length error。修复后：Indexed 91/91 files · 394 chunks，无报错。所有 13 个 agent 索引正常。commit: 4700ad3。",
+    "vector": [],
+    "category": "decision",
+    "scope": "agent:main",
+    "importance": 0.9,
+    "timestamp": 1773477992699,
+    "metadata": "{\"l0_abstract\":\"【builtin memorySearch 阻塞修复】2026-03-14：通过源码分析发现 OpenClaw `walkDir()` 会跳过 symlink 目录。将 `memory/archive/` 实际目录移至 `~/.openclaw/memory-archive/`，在原位创建 symlink。修复前：Indexed 40/126 files，sync failed，Ollama context-length error。修复后：Indexed 91/91 files · 394 chunks，无报错。所有 13 个 agent 索引正常。commit: 4700ad3。\",\"l1_overview\":\"- 【builtin memorySearch 阻塞修复】2026-03-14：通过源码分析发现 OpenClaw `walkDir()` 会跳过 symlink 目录。将 `memory/archive/` 实际目录移至 `~/.openclaw/memory-archive/`，在原位创建 symlink。修复前：Indexed 40/126 files，sync failed，Ollama context-length error。修复后：Indexed 91/91 files · 394 chunks，无报错。所有 13 个 agent 索引正常。commit: 4700ad3。\",\"l2_content\":\"【builtin memorySearch 阻塞修复】2026-03-14：通过源码分析发现 OpenClaw `walkDir()` 会跳过 symlink 目录。将 `memory/archive/` 实际目录移至 `~/.openclaw/memory-archive/`，在原位创建 symlink。修复前：Indexed 40/126 files，sync failed，Ollama context-length error。修复后：Indexed 91/91 files · 394 chunks，无报错。所有 13 个 agent 索引正常。commit: 4700ad3。\",\"memory_category\":\"events\",\"tier\":\"working\",\"access_count\":8,\"confidence\":0.7,\"last_accessed_at\":1773499440655}"
+  },
+  {
+    "id": "0af28688-be87-4e2e-a41f-46024ad9443e",
+    "text": "【OpenClaw 新版本联动规则】2026-03-14：只要晨星告诉我“OpenClaw 有新版本了”，我必须同步立即更新 openclaw-docs 笔记（NotebookLM 的 `openclaw-docs` notebook），不需要再等额外提醒。标准动作：确认版本变化 → 触发 `openclaw-docs-update` → 回报更新结果。",
+    "vector": [],
+    "category": "decision",
+    "scope": "agent:main",
+    "importance": 0.94,
+    "timestamp": 1773457721709,
+    "metadata": "{\"l0_abstract\":\"【OpenClaw 新版本联动规则】2026-03-14：只要晨星告诉我“OpenClaw 有新版本了”，我必须同步立即更新 openclaw-docs 笔记（NotebookLM 的 `openclaw-docs` notebook），不需要再等额外提醒。标准动作：确认版本变化 → 触发 `openclaw-docs-update` → 回报更新结果。\",\"l1_overview\":\"- 【OpenClaw 新版本联动规则】2026-03-14：只要晨星告诉我“OpenClaw 有新版本了”，我必须同步立即更新 openclaw-docs 笔记（NotebookLM 的 `openclaw-docs` notebook），不需要再等额外提醒。标准动作：确认版本变化 → 触发 `openclaw-docs-update` → 回报更新结果。\",\"l2_content\":\"【OpenClaw 新版本联动规则】2026-03-14：只要晨星告诉我“OpenClaw 有新版本了”，我必须同步立即更新 openclaw-docs 笔记（NotebookLM 的 `openclaw-docs` notebook），不需要再等额外提醒。标准动作：确认版本变化 → 触发 `openclaw-docs-update` → 回报更新结果。\",\"memory_category\":\"events\",\"tier\":\"working\",\"access_count\":2,\"confidence\":0.7,\"last_accessed_at\":1773476412752}"
+  },
+  {
+    "id": "068a79d6-03d9-4025-a892-dfb5ac1c4739",
+    "text": "【GitHub 语言规则修正】2026-03-14：不要把 GitHub / 上游沟通语言一刀切定成英文。应按仓库与维护者语境决定语言。对于 `CortexReach/memory-lancedb-pro` 这类国人开发/中文语境仓库，issue、PR、comment、commit message 可以直接使用中文。与晨星私聊仍使用中文。",
+    "vector": [],
+    "category": "preference",
+    "scope": "agent:main",
+    "importance": 0.9,
+    "timestamp": 1773455929892,
+    "metadata": "{\"l0_abstract\":\"【GitHub 语言规则修正】2026-03-14：不要把 GitHub / 上游沟通语言一刀切定成英文。应按仓库与维护者语境决定语言。对于 `CortexReach/memory-lancedb-pro` 这类国人开发/中文语境仓库，issue、PR、comment、commit message 可以直接使用中文。与晨星私聊仍使用中文。\",\"l1_overview\":\"- 【GitHub 语言规则修正】2026-03-14：不要把 GitHub / 上游沟通语言一刀切定成英文。应按仓库与维护者语境决定语言。对于 `CortexReach/memory-lancedb-pro` 这类国人开发/中文语境仓库，issue、PR、comment、commit message 可以直接使用中文。与晨星私聊仍使用中文。\",\"l2_content\":\"【GitHub 语言规则修正】2026-03-14：不要把 GitHub / 上游沟通语言一刀切定成英文。应按仓库与维护者语境决定语言。对于 `CortexReach/memory-lancedb-pro` 这类国人开发/中文语境仓库，issue、PR、comment、commit message 可以直接使用中文。与晨星私聊仍使用中文。\",\"memory_category\":\"preferences\",\"tier\":\"working\",\"access_count\":2,\"confidence\":0.7,\"last_accessed_at\":1773477862746}"
+  },
+  {
+    "id": "bc2d8854-ce87-4313-8f2f-1207f4890ede",
+    "text": "【升级后记忆系统回归修复】2026-03-14：升级到 memory-lancedb-pro@1.1.0-beta.8 后，`memory_stats` / `memory_list` 默认返回 0，但 `memory_recall` 仍可召回。根因是升级覆盖了 `src/tools.ts` 中 `resolveRuntimeAgentId(... ) || 'main'` 的本地补丁；仅做轻量 gateway reload 不够，必须执行完整 `openclaw gateway restart` 才会让插件源码修复真正生效。修复后 Layer 2 恢复：memory_stats=307, memory_list 正常。",
+    "vector": [],
+    "category": "decision",
+    "scope": "agent:main",
+    "importance": 0.91,
+    "timestamp": 1773455013804,
+    "metadata": "{\"l0_abstract\":\"【升级后记忆系统回归修复】2026-03-14：升级到 memory-lancedb-pro@1.1.0-beta.8 后，`memory_stats` / `memory_list` 默认返回 0，但 `memory_recall` 仍可召回。根因是升级覆盖了 `src/tools.ts` 中 `resolveRuntimeAgentId(... ) || 'main'` 的本地补丁；仅做轻量 gateway reload 不够，必须执行完整 `openclaw gateway restart` 才会让插件源码修复真正生效。修复后 Layer 2 恢复：memory_stats=307, memory_list 正常。\",\"l1_overview\":\"- 【升级后记忆系统回归修复】2026-03-14：升级到 memory-lancedb-pro@1.1.0-beta.8 后，`memory_stats` / `memory_list` 默认返回 0，但 `memory_recall` 仍可召回。根因是升级覆盖了 `src/tools.ts` 中 `resolveRuntimeAgentId(... ) || 'main'` 的本地补丁；仅做轻量 gateway reload 不够，必须执行完整 `openclaw gateway restart` 才会让插件源码修复真正生效。修复后 Layer 2 恢复：memory_stats=307, memory_list 正常。\",\"l2_content\":\"【升级后记忆系统回归修复】2026-03-14：升级到 memory-lancedb-pro@1.1.0-beta.8 后，`memory_stats` / `memory_list` 默认返回 0，但 `memory_recall` 仍可召回。根因是升级覆盖了 `src/tools.ts` 中 `resolveRuntimeAgentId(... ) || 'main'` 的本地补丁；仅做轻量 gateway reload 不够，必须执行完整 `openclaw gateway restart` 才会让插件源码修复真正生效。修复后 Layer 2 恢复：memory_stats=307, memory_list 正常。\",\"memory_category\":\"events\",\"tier\":\"core\",\"access_count\":15,\"confidence\":0.7,\"last_accessed_at\":1773501706831,\"tier_updated_at\":1773496102387}"
+  },
+  {
     "id": "67fc9bcf-37f3-4c6c-b75b-92f169266cb9",
     "text": "【OpenClaw 配置排查顺序】2026-03-13：凡是 OpenClaw 配置、行为、架构、命令相关问题，先查 openclaw-docs NotebookLM 笔记，再用本地 docs / config schema 做验证或补充；不要直接跳过 openclaw-docs。",
     "vector": [],
@@ -17,7 +97,7 @@
     "scope": "agent:main",
     "importance": 0.95,
     "timestamp": 1773410407759,
-    "metadata": "{}"
+    "metadata": "{\"l0_abstract\":\"【TODO 主计划纳入规则】2026-03-13：以后只要新生成了 TODO 计划文件，就必须立即同步纳入 `~/.openclaw/todo/master-execution-plan.md`。原则：新计划创建 ≈ 主计划新增/挂接；不能只创建原 TODO 文件而不加入主执行计划。\",\"l1_overview\":\"- 【TODO 主计划纳入规则】2026-03-13：以后只要新生成了 TODO 计划文件，就必须立即同步纳入 `~/.openclaw/todo/master-execution-plan.md`。原则：新计划创建 ≈ 主计划新增/挂接；不能只创建原 TODO 文件而不加入主执行计划。\",\"l2_content\":\"【TODO 主计划纳入规则】2026-03-13：以后只要新生成了 TODO 计划文件，就必须立即同步纳入 `~/.openclaw/todo/master-execution-plan.md`。原则：新计划创建 ≈ 主计划新增/挂接；不能只创建原 TODO 文件而不加入主执行计划。\",\"memory_category\":\"events\",\"tier\":\"working\",\"access_count\":1,\"confidence\":0.7,\"last_accessed_at\":1773476410377}"
   },
   {
     "id": "492ae0ed-b5a4-4eb6-ac79-9cd66fa688e3",
@@ -37,7 +117,7 @@
     "scope": "agent:main",
     "importance": 0.9,
     "timestamp": 1773401189963,
-    "metadata": "{}"
+    "metadata": "{\"l0_abstract\":\"【TODO 目录约定】所有 TODO 任务文件统一放在 `~/.openclaw/todo/` 目录下，不是 `workspace/todo/`。HEARTBEAT.md 中的 TODO 跟进检查也应该指向这个目录。\",\"l1_overview\":\"- 【TODO 目录约定】所有 TODO 任务文件统一放在 `~/.openclaw/todo/` 目录下，不是 `workspace/todo/`。HEARTBEAT.md 中的 TODO 跟进检查也应该指向这个目录。\",\"l2_content\":\"【TODO 目录约定】所有 TODO 任务文件统一放在 `~/.openclaw/todo/` 目录下，不是 `workspace/todo/`。HEARTBEAT.md 中的 TODO 跟进检查也应该指向这个目录。\",\"memory_category\":\"events\",\"tier\":\"working\",\"access_count\":1,\"confidence\":0.7,\"last_accessed_at\":1773475014234}"
   },
   {
     "id": "a9b82f5a-8518-48a9-9ed5-63cf2d92b07f",
@@ -57,7 +137,7 @@
     "scope": "agent:main",
     "importance": 0.97,
     "timestamp": 1773393402254,
-    "metadata": "{\"accessCount\":2,\"lastAccessedAt\":1773399414495}"
+    "metadata": "{\"accessCount\":2,\"lastAccessedAt\":1773399414495,\"l0_abstract\":\"【通知现行规则】2026-03-13：在 `sessions_spawn(mode=run)` 中，subagent completion/announce 与 `message(...)` 是独立链路。announce 回 main 通常比子 agent 直发 Telegram 更可靠，但仍是 best-effort。所有关键开始/进度/完成/失败通知统一由 main 作为可靠主链路发送；agent 自推仅为 best-effort 辅链路；announce 异常时再用输出文件检查作为 fallback。\",\"l1_overview\":\"- 【通知现行规则】2026-03-13：在 `sessions_spawn(mode=run)` 中，subagent completion/announce 与 `message(...)` 是独立链路。announce 回 main 通常比子 agent 直发 Telegram 更可靠，但仍是 best-effort。所有关键开始/进度/完成/失败通知统一由 main 作为可靠主链路发送；agent 自推仅为 best-effort 辅链路；announce 异常时再用输出文件检查作为 fallback。\",\"l2_content\":\"【通知现行规则】2026-03-13：在 `sessions_spawn(mode=run)` 中，subagent completion/announce 与 `message(...)` 是独立链路。announce 回 main 通常比子 agent 直发 Telegram 更可靠，但仍是 best-effort。所有关键开始/进度/完成/失败通知统一由 main 作为可靠主链路发送；agent 自推仅为 best-effort 辅链路；announce 异常时再用输出文件检查作为 fallback。\",\"memory_category\":\"events\",\"tier\":\"core\",\"access_count\":10,\"confidence\":0.7,\"last_accessed_at\":1773501706831,\"tier_updated_at\":1773501706831}"
   },
   {
     "id": "9b4a3c01-6cdb-48e7-b3f9-4d5dc7b012a7",
@@ -77,7 +157,7 @@
     "scope": "agent:main",
     "importance": 0.98,
     "timestamp": 1773360934931,
-    "metadata": "{\"l0_abstract\":\"【晨星核心约定】遇到问题要第一时间解决修复（2026-03-13 晨星指正）。正确流程：发现问题 → 立即分析 → 立即修复 → 报告结果。错误流程：发现问题 → 报告 → 等指令 → 修复。今天的错误：发现向量数据库路径错误、CLI 命令错误、Memory Archive 298 个重复 sources，都是先报告再等指令才修复。应该是发现问题立即修复，不要等晨星说\\\"修复\\\"才开始。这是主动性的核心体现。\",\"l1_overview\":\"- 【晨星核心约定】遇到问题要第一时间解决修复（2026-03-13 晨星指正）。正确流程：发现问题 → 立即分析 → 立即修复 → 报告结果。错误流程：发现问题 → 报告 → 等指令 → 修复。今天的错误：发现向量数据库路径错误、CLI 命令错误、Memory Archive 298 个重复 sources，都是先报告再等指令才修复。应该是发现问题立即修复，不要等晨星说\\\"修复\\\"才开始。这是主动性的核心体现。\",\"l2_content\":\"【晨星核心约定】遇到问题要第一时间解决修复（2026-03-13 晨星指正）。正确流程：发现问题 → 立即分析 → 立即修复 → 报告结果。错误流程：发现问题 → 报告 → 等指令 → 修复。今天的错误：发现向量数据库路径错误、CLI 命令错误、Memory Archive 298 个重复 sources，都是先报告再等指令才修复。应该是发现问题立即修复，不要等晨星说\\\"修复\\\"才开始。这是主动性的核心体现。\",\"memory_category\":\"preferences\",\"tier\":\"working\",\"access_count\":0,\"confidence\":0.7,\"last_accessed_at\":1773360934931}"
+    "metadata": "{\"l0_abstract\":\"【晨星核心约定】遇到问题要第一时间解决修复（2026-03-13 晨星指正）。正确流程：发现问题 → 立即分析 → 立即修复 → 报告结果。错误流程：发现问题 → 报告 → 等指令 → 修复。今天的错误：发现向量数据库路径错误、CLI 命令错误、Memory Archive 298 个重复 sources，都是先报告再等指令才修复。应该是发现问题立即修复，不要等晨星说\\\"修复\\\"才开始。这是主动性的核心体现。\",\"l1_overview\":\"- 【晨星核心约定】遇到问题要第一时间解决修复（2026-03-13 晨星指正）。正确流程：发现问题 → 立即分析 → 立即修复 → 报告结果。错误流程：发现问题 → 报告 → 等指令 → 修复。今天的错误：发现向量数据库路径错误、CLI 命令错误、Memory Archive 298 个重复 sources，都是先报告再等指令才修复。应该是发现问题立即修复，不要等晨星说\\\"修复\\\"才开始。这是主动性的核心体现。\",\"l2_content\":\"【晨星核心约定】遇到问题要第一时间解决修复（2026-03-13 晨星指正）。正确流程：发现问题 → 立即分析 → 立即修复 → 报告结果。错误流程：发现问题 → 报告 → 等指令 → 修复。今天的错误：发现向量数据库路径错误、CLI 命令错误、Memory Archive 298 个重复 sources，都是先报告再等指令才修复。应该是发现问题立即修复，不要等晨星说\\\"修复\\\"才开始。这是主动性的核心体现。\",\"memory_category\":\"preferences\",\"tier\":\"working\",\"access_count\":1,\"confidence\":0.7,\"last_accessed_at\":1773485156899}"
   },
   {
     "id": "6260896c-bdf2-452c-a9c1-e12e42ed7cd4",
@@ -137,7 +217,7 @@
     "scope": "agent:main",
     "importance": 0.9,
     "timestamp": 1773325874534,
-    "metadata": "{\"l0_abstract\":\"【执行铁律】创建脚本时必须先查看命令帮助（2026-03-12）。错误案例：starchain-launcher.sh 和 stareval-launcher.sh 都使用了 `--task` 参数，但 `openclaw agent` 命令需要 `-m` 或 `--message` 参数。导致脚本无法运行。教训：1) 创建脚本时先运行 `<command> --help` 确认参数名；2) 修复一个脚本的 bug 后，检查其他类似脚本是否有相同问题；3) 修复完成后立即推送到 GitHub，不要遗漏。正确做法：查看帮助 → 确认参数 → 编写脚本 → 测试运行 → 推送 GitHub。\",\"l1_overview\":\"- 【执行铁律】创建脚本时必须先查看命令帮助（2026-03-12）。错误案例：starchain-launcher.sh 和 stareval-launcher.sh 都使用了 `--task` 参数，但 `openclaw agent` 命令需要 `-m` 或 `--message` 参数。导致脚本无法运行。教训：1) 创建脚本时先运行 `<command> --help` 确认参数名；2) 修复一个脚本的 bug 后，检查其他类似脚本是否有相同问题；3) 修复完成后立即推送到 GitHub，不要遗漏。正确做法：查看帮助 → 确认参数 → 编写脚本 → 测试运行 → 推送 GitHub。\",\"l2_content\":\"【执行铁律】创建脚本时必须先查看命令帮助（2026-03-12）。错误案例：starchain-launcher.sh 和 stareval-launcher.sh 都使用了 `--task` 参数，但 `openclaw agent` 命令需要 `-m` 或 `--message` 参数。导致脚本无法运行。教训：1) 创建脚本时先运行 `<command> --help` 确认参数名；2) 修复一个脚本的 bug 后，检查其他类似脚本是否有相同问题；3) 修复完成后立即推送到 GitHub，不要遗漏。正确做法：查看帮助 → 确认参数 → 编写脚本 → 测试运行 → 推送 GitHub。\",\"memory_category\":\"events\",\"tier\":\"working\",\"access_count\":5,\"confidence\":0.7,\"last_accessed_at\":1773356401152}"
+    "metadata": "{\"l0_abstract\":\"【执行铁律】创建脚本时必须先查看命令帮助（2026-03-12）。错误案例：starchain-launcher.sh 和 stareval-launcher.sh 都使用了 `--task` 参数，但 `openclaw agent` 命令需要 `-m` 或 `--message` 参数。导致脚本无法运行。教训：1) 创建脚本时先运行 `<command> --help` 确认参数名；2) 修复一个脚本的 bug 后，检查其他类似脚本是否有相同问题；3) 修复完成后立即推送到 GitHub，不要遗漏。正确做法：查看帮助 → 确认参数 → 编写脚本 → 测试运行 → 推送 GitHub。\",\"l1_overview\":\"- 【执行铁律】创建脚本时必须先查看命令帮助（2026-03-12）。错误案例：starchain-launcher.sh 和 stareval-launcher.sh 都使用了 `--task` 参数，但 `openclaw agent` 命令需要 `-m` 或 `--message` 参数。导致脚本无法运行。教训：1) 创建脚本时先运行 `<command> --help` 确认参数名；2) 修复一个脚本的 bug 后，检查其他类似脚本是否有相同问题；3) 修复完成后立即推送到 GitHub，不要遗漏。正确做法：查看帮助 → 确认参数 → 编写脚本 → 测试运行 → 推送 GitHub。\",\"l2_content\":\"【执行铁律】创建脚本时必须先查看命令帮助（2026-03-12）。错误案例：starchain-launcher.sh 和 stareval-launcher.sh 都使用了 `--task` 参数，但 `openclaw agent` 命令需要 `-m` 或 `--message` 参数。导致脚本无法运行。教训：1) 创建脚本时先运行 `<command> --help` 确认参数名；2) 修复一个脚本的 bug 后，检查其他类似脚本是否有相同问题；3) 修复完成后立即推送到 GitHub，不要遗漏。正确做法：查看帮助 → 确认参数 → 编写脚本 → 测试运行 → 推送 GitHub。\",\"memory_category\":\"events\",\"tier\":\"core\",\"access_count\":11,\"confidence\":0.7,\"last_accessed_at\":1773493830647,\"tier_updated_at\":1773492813689}"
   },
   {
     "id": "9c3282bc-0759-4fb6-9957-dbb5fa852fec",
@@ -277,7 +357,7 @@
     "scope": "agent:main",
     "importance": 0.9,
     "timestamp": 1773306996091,
-    "metadata": "{\"l0_abstract\":\"OpenClaw 目录约定（正式规则）：\\n1. 所有 skills 统一放在 ~/.openclaw/skills/（无论系统级还是自定义）\\n2. 所有系统级脚本统一放在 ~/.openclaw/scripts/\\n3. 所有待办任务统一放在 ~/.openclaw/todo/\\n4. ~/.openclaw/workspace/ 只放项目相关文件（SOUL.md, AGENTS.md, MEMORY.md, memory/, shared-context/, intel/, agents/）\\n5. 禁止在 workspace 下创建 skills/, scripts/, todo/ 目录\\n判断标准：系统级（全局共享、可复用）→ ~/.openclaw/；工作区级（项目相关）→ ~/.openclaw/workspace/\",\"l1_overview\":\"- OpenClaw 目录约定（正式规则）：\\n1. 所有 skills 统一放在 ~/.openclaw/skills/（无论系统级还是自定义）\\n2. 所有系统级脚本统一放在 ~/.openclaw/scripts/\\n3. 所有待办任务统一放在 ~/.openclaw/todo/\\n4. ~/.openclaw/workspace/ 只放项目相关文件（SOUL.md, AGENTS.md, MEMORY.md, memory/, shared-context/, intel/, agents/）\\n5. 禁止在 workspace 下创建 skills/, scripts/, todo/ 目录\\n判断标准：系统级（全局共享、可复用）→ ~/.openclaw/；工作区级（项目相关）→ ~/.openclaw/workspace/\",\"l2_content\":\"OpenClaw 目录约定（正式规则）：\\n1. 所有 skills 统一放在 ~/.openclaw/skills/（无论系统级还是自定义）\\n2. 所有系统级脚本统一放在 ~/.openclaw/scripts/\\n3. 所有待办任务统一放在 ~/.openclaw/todo/\\n4. ~/.openclaw/workspace/ 只放项目相关文件（SOUL.md, AGENTS.md, MEMORY.md, memory/, shared-context/, intel/, agents/）\\n5. 禁止在 workspace 下创建 skills/, scripts/, todo/ 目录\\n判断标准：系统级（全局共享、可复用）→ ~/.openclaw/；工作区级（项目相关）→ ~/.openclaw/workspace/\",\"memory_category\":\"events\",\"tier\":\"working\",\"access_count\":2,\"confidence\":0.7,\"last_accessed_at\":1773367898912}"
+    "metadata": "{\"l0_abstract\":\"OpenClaw 目录约定（正式规则）：\\n1. 所有 skills 统一放在 ~/.openclaw/skills/（无论系统级还是自定义）\\n2. 所有系统级脚本统一放在 ~/.openclaw/scripts/\\n3. 所有待办任务统一放在 ~/.openclaw/todo/\\n4. ~/.openclaw/workspace/ 只放项目相关文件（SOUL.md, AGENTS.md, MEMORY.md, memory/, shared-context/, intel/, agents/）\\n5. 禁止在 workspace 下创建 skills/, scripts/, todo/ 目录\\n判断标准：系统级（全局共享、可复用）→ ~/.openclaw/；工作区级（项目相关）→ ~/.openclaw/workspace/\",\"l1_overview\":\"- OpenClaw 目录约定（正式规则）：\\n1. 所有 skills 统一放在 ~/.openclaw/skills/（无论系统级还是自定义）\\n2. 所有系统级脚本统一放在 ~/.openclaw/scripts/\\n3. 所有待办任务统一放在 ~/.openclaw/todo/\\n4. ~/.openclaw/workspace/ 只放项目相关文件（SOUL.md, AGENTS.md, MEMORY.md, memory/, shared-context/, intel/, agents/）\\n5. 禁止在 workspace 下创建 skills/, scripts/, todo/ 目录\\n判断标准：系统级（全局共享、可复用）→ ~/.openclaw/；工作区级（项目相关）→ ~/.openclaw/workspace/\",\"l2_content\":\"OpenClaw 目录约定（正式规则）：\\n1. 所有 skills 统一放在 ~/.openclaw/skills/（无论系统级还是自定义）\\n2. 所有系统级脚本统一放在 ~/.openclaw/scripts/\\n3. 所有待办任务统一放在 ~/.openclaw/todo/\\n4. ~/.openclaw/workspace/ 只放项目相关文件（SOUL.md, AGENTS.md, MEMORY.md, memory/, shared-context/, intel/, agents/）\\n5. 禁止在 workspace 下创建 skills/, scripts/, todo/ 目录\\n判断标准：系统级（全局共享、可复用）→ ~/.openclaw/；工作区级（项目相关）→ ~/.openclaw/workspace/\",\"memory_category\":\"events\",\"tier\":\"core\",\"access_count\":14,\"confidence\":0.7,\"last_accessed_at\":1773505637004,\"tier_updated_at\":1773492813689,\"valid_from\":1773306996091}"
   },
   {
     "id": "ee97ae9b-e432-4e08-b124-a32a93a4002d",
@@ -337,7 +417,7 @@
     "scope": "agent:main",
     "importance": 1,
     "timestamp": 1773240698948,
-    "metadata": "{\"accessCount\":5,\"lastAccessedAt\":1773399414377}"
+    "metadata": "{\"accessCount\":5,\"lastAccessedAt\":1773399414377,\"l0_abstract\":\"【执行铁律】2026-03-11 22:51 晨星最终强调：1) 不要每次都说\\\"【强制暂停】\\\"；2) 你说\\\"停止\\\"时，立即停止所有操作并闭嘴，不再说任何话；3) 知道规则就执行，不要问\\\"要我...吗？\\\"；4) Step 2A 产出有问题时，立即发现并重跑；5) NotebookLM agent 直接用 notebooklm CLI，不是 nlm-gateway.sh；6) 工具失败时立即检查、记录、诊断。核心问题：不是\\\"不知道规则\\\"，而是\\\"知道规则但不执行\\\"。必须建立执行习惯，不是记忆习惯。\",\"l1_overview\":\"- 【执行铁律】2026-03-11 22:51 晨星最终强调：1) 不要每次都说\\\"【强制暂停】\\\"；2) 你说\\\"停止\\\"时，立即停止所有操作并闭嘴，不再说任何话；3) 知道规则就执行，不要问\\\"要我...吗？\\\"；4) Step 2A 产出有问题时，立即发现并重跑；5) NotebookLM agent 直接用 notebooklm CLI，不是 nlm-gateway.sh；6) 工具失败时立即检查、记录、诊断。核心问题：不是\\\"不知道规则\\\"，而是\\\"知道规则但不执行\\\"。必须建立执行习惯，不是记忆习惯。\",\"l2_content\":\"【执行铁律】2026-03-11 22:51 晨星最终强调：1) 不要每次都说\\\"【强制暂停】\\\"；2) 你说\\\"停止\\\"时，立即停止所有操作并闭嘴，不再说任何话；3) 知道规则就执行，不要问\\\"要我...吗？\\\"；4) Step 2A 产出有问题时，立即发现并重跑；5) NotebookLM agent 直接用 notebooklm CLI，不是 nlm-gateway.sh；6) 工具失败时立即检查、记录、诊断。核心问题：不是\\\"不知道规则\\\"，而是\\\"知道规则但不执行\\\"。必须建立执行习惯，不是记忆习惯。\",\"memory_category\":\"events\",\"tier\":\"working\",\"access_count\":1,\"confidence\":0.7,\"last_accessed_at\":1773484200723}"
   },
   {
     "id": "4642bf93-78f8-409c-b6f7-a847a90bcb4b",
@@ -437,7 +517,7 @@
     "scope": "agent:main",
     "importance": 0.9,
     "timestamp": 1773223710729,
-    "metadata": "{}"
+    "metadata": "{\"l0_abstract\":\"星鉴流水线升级到 v2.1（2026-03-11）：恢复 OpenAI 宪法环节。新流程：Gemini 快速扫描 → OpenAI 宪法（规则制定）→ NotebookLM 深度研究（基于宪法）→ Claude 复核优化 → Gemini 一致性检查 → OpenAI/Claude 仲裁。核心优势：宪法约束（OpenAI）+ 深度理解（NotebookLM）双引擎，预计研究深度提升 45-55%，方案完整性提升 35-45%，D 级质量提升 45-55%。晨星认为取消宪法环节会降低质量，因此采用方案 A 恢复宪法环节。\",\"l1_overview\":\"- 星鉴流水线升级到 v2.1（2026-03-11）：恢复 OpenAI 宪法环节。新流程：Gemini 快速扫描 → OpenAI 宪法（规则制定）→ NotebookLM 深度研究（基于宪法）→ Claude 复核优化 → Gemini 一致性检查 → OpenAI/Claude 仲裁。核心优势：宪法约束（OpenAI）+ 深度理解（NotebookLM）双引擎，预计研究深度提升 45-55%，方案完整性提升 35-45%，D 级质量提升 45-55%。晨星认为取消宪法环节会降低质量，因此采用方案 A 恢复宪法环节。\",\"l2_content\":\"星鉴流水线升级到 v2.1（2026-03-11）：恢复 OpenAI 宪法环节。新流程：Gemini 快速扫描 → OpenAI 宪法（规则制定）→ NotebookLM 深度研究（基于宪法）→ Claude 复核优化 → Gemini 一致性检查 → OpenAI/Claude 仲裁。核心优势：宪法约束（OpenAI）+ 深度理解（NotebookLM）双引擎，预计研究深度提升 45-55%，方案完整性提升 35-45%，D 级质量提升 45-55%。晨星认为取消宪法环节会降低质量，因此采用方案 A 恢复宪法环节。\",\"memory_category\":\"events\",\"tier\":\"working\",\"access_count\":1,\"confidence\":0.7,\"last_accessed_at\":1773485156899}"
   },
   {
     "id": "c26dbcec-ef91-432c-a9cd-ff3f67c27c10",
@@ -447,7 +527,7 @@
     "scope": "agent:main",
     "importance": 0.95,
     "timestamp": 1773209125160,
-    "metadata": "{\"accessCount\":3,\"lastAccessedAt\":1773286907036}"
+    "metadata": "{\"accessCount\":3,\"lastAccessedAt\":1773286907036,\"l0_abstract\":\"【执行问题根源再确认】2026-03-11 14:05：晨星再次纠正我\\\"为什么又来问我\\\"。我的问题不是\\\"不知道规则\\\"，而是\\\"知道规则但不执行\\\"。即使刚刚说了\\\"应该直接执行\\\"，下一次遇到类似情况仍然会问。这是深层的执行模式问题，不是知识问题。必须在每次准备说\\\"要我...吗？\\\"之前强制暂停，检查是否应该直接执行。\",\"l1_overview\":\"- 【执行问题根源再确认】2026-03-11 14:05：晨星再次纠正我\\\"为什么又来问我\\\"。我的问题不是\\\"不知道规则\\\"，而是\\\"知道规则但不执行\\\"。即使刚刚说了\\\"应该直接执行\\\"，下一次遇到类似情况仍然会问。这是深层的执行模式问题，不是知识问题。必须在每次准备说\\\"要我...吗？\\\"之前强制暂停，检查是否应该直接执行。\",\"l2_content\":\"【执行问题根源再确认】2026-03-11 14:05：晨星再次纠正我\\\"为什么又来问我\\\"。我的问题不是\\\"不知道规则\\\"，而是\\\"知道规则但不执行\\\"。即使刚刚说了\\\"应该直接执行\\\"，下一次遇到类似情况仍然会问。这是深层的执行模式问题，不是知识问题。必须在每次准备说\\\"要我...吗？\\\"之前强制暂停，检查是否应该直接执行。\",\"memory_category\":\"events\",\"tier\":\"working\",\"access_count\":5,\"confidence\":0.7,\"last_accessed_at\":1773486168854}"
   },
   {
     "id": "d941a3c9-cb14-42ba-befc-40a57be04caf",
@@ -527,7 +607,7 @@
     "scope": "agent:main",
     "importance": 1,
     "timestamp": 1773158650528,
-    "metadata": "{\"accessCount\":6,\"lastAccessedAt\":1773399414609}"
+    "metadata": "{\"accessCount\":6,\"lastAccessedAt\":1773399414609,\"l0_abstract\":\"【流水线去重机制】2026-03-11：Main 必须记录已处理的完成事件，避免重复处理延迟到达的 announce。方案：1) 维护已完成任务的 session key 集合；2) 收到 announce 时先检查是否已处理；3) 如果已处理，直接 NO_REPLY；4) 如果未处理，正常处理并记录。这样可以避免延迟 announce 导致的重复消息。\",\"l1_overview\":\"- 【流水线去重机制】2026-03-11：Main 必须记录已处理的完成事件，避免重复处理延迟到达的 announce。方案：1) 维护已完成任务的 session key 集合；2) 收到 announce 时先检查是否已处理；3) 如果已处理，直接 NO_REPLY；4) 如果未处理，正常处理并记录。这样可以避免延迟 announce 导致的重复消息。\",\"l2_content\":\"【流水线去重机制】2026-03-11：Main 必须记录已处理的完成事件，避免重复处理延迟到达的 announce。方案：1) 维护已完成任务的 session key 集合；2) 收到 announce 时先检查是否已处理；3) 如果已处理，直接 NO_REPLY；4) 如果未处理，正常处理并记录。这样可以避免延迟 announce 导致的重复消息。\",\"memory_category\":\"events\",\"tier\":\"working\",\"access_count\":1,\"confidence\":0.7,\"last_accessed_at\":1773460256493}"
   },
   {
     "id": "f89e962d-5c54-4d21-b5bb-322d9c3bf1b8",
@@ -627,7 +707,7 @@
     "scope": "agent:main",
     "importance": 0.9,
     "timestamp": 1773144365444,
-    "metadata": "{\"accessCount\":3,\"lastAccessedAt\":1773231914688,\"l0_abstract\":\"Memory Archive notebook 清理与配置完成（2026-03-10 20:05）\\n\\nNotebook ID: bb3121a4-5e95-4d32-8d9a-a85cf1e363af\\n\\n清理结果：\\n- 从 108 个 source 减少到 13 个\\n- 只保留最近 4 周的每日主文件（2026-02-24 到 2026-03-10）\\n- 保留最新的 MEMORY.md\\n- 删除所有细分文件和临时文件\\n\\n已添加到 notebooks.json 配置文件：\\n- 名称: memory-archive\\n- 描述: Memory Archive with rolling window (4 weeks)\\n\\n相关脚本已使用此 notebook ID：\\n- maintain-memory.sh\\n- sync-high-priority-memories.sh\\n- daily-memory-report.sh\\n\\n滚动窗口策略：保留最近 4 周的每日主文件，自动清理超过 4 周的旧文件。\",\"l1_overview\":\"- Memory Archive notebook 清理与配置完成（2026-03-10 20:05）\\n\\nNotebook ID: bb3121a4-5e95-4d32-8d9a-a85cf1e363af\\n\\n清理结果：\\n- 从 108 个 source 减少到 13 个\\n- 只保留最近 4 周的每日主文件（2026-02-24 到 2026-03-10）\\n- 保留最新的 MEMORY.md\\n- 删除所有细分文件和临时文件\\n\\n已添加到 notebooks.json 配置文件：\\n- 名称: memory-archive\\n- 描述: Memory Archive with rolling window (4 weeks)\\n\\n相关脚本已使用此 notebook ID：\\n- maintain-memory.sh\\n- sync-high-priority-memories.sh\\n- daily-memory-report.sh\\n\\n滚动窗口策略：保留最近 4 周的每日主文件，自动清理超过 4 周的旧文件。\",\"l2_content\":\"Memory Archive notebook 清理与配置完成（2026-03-10 20:05）\\n\\nNotebook ID: bb3121a4-5e95-4d32-8d9a-a85cf1e363af\\n\\n清理结果：\\n- 从 108 个 source 减少到 13 个\\n- 只保留最近 4 周的每日主文件（2026-02-24 到 2026-03-10）\\n- 保留最新的 MEMORY.md\\n- 删除所有细分文件和临时文件\\n\\n已添加到 notebooks.json 配置文件：\\n- 名称: memory-archive\\n- 描述: Memory Archive with rolling window (4 weeks)\\n\\n相关脚本已使用此 notebook ID：\\n- maintain-memory.sh\\n- sync-high-priority-memories.sh\\n- daily-memory-report.sh\\n\\n滚动窗口策略：保留最近 4 周的每日主文件，自动清理超过 4 周的旧文件。\",\"memory_category\":\"cases\",\"tier\":\"core\",\"access_count\":22,\"confidence\":0.7,\"last_accessed_at\":1773382017717,\"tier_updated_at\":1773367996038}"
+    "metadata": "{\"accessCount\":3,\"lastAccessedAt\":1773231914688,\"l0_abstract\":\"Memory Archive notebook 清理与配置完成（2026-03-10 20:05）\\n\\nNotebook ID: bb3121a4-5e95-4d32-8d9a-a85cf1e363af\\n\\n清理结果：\\n- 从 108 个 source 减少到 13 个\\n- 只保留最近 4 周的每日主文件（2026-02-24 到 2026-03-10）\\n- 保留最新的 MEMORY.md\\n- 删除所有细分文件和临时文件\\n\\n已添加到 notebooks.json 配置文件：\\n- 名称: memory-archive\\n- 描述: Memory Archive with rolling window (4 weeks)\\n\\n相关脚本已使用此 notebook ID：\\n- maintain-memory.sh\\n- sync-high-priority-memories.sh\\n- daily-memory-report.sh\\n\\n滚动窗口策略：保留最近 4 周的每日主文件，自动清理超过 4 周的旧文件。\",\"l1_overview\":\"- Memory Archive notebook 清理与配置完成（2026-03-10 20:05）\\n\\nNotebook ID: bb3121a4-5e95-4d32-8d9a-a85cf1e363af\\n\\n清理结果：\\n- 从 108 个 source 减少到 13 个\\n- 只保留最近 4 周的每日主文件（2026-02-24 到 2026-03-10）\\n- 保留最新的 MEMORY.md\\n- 删除所有细分文件和临时文件\\n\\n已添加到 notebooks.json 配置文件：\\n- 名称: memory-archive\\n- 描述: Memory Archive with rolling window (4 weeks)\\n\\n相关脚本已使用此 notebook ID：\\n- maintain-memory.sh\\n- sync-high-priority-memories.sh\\n- daily-memory-report.sh\\n\\n滚动窗口策略：保留最近 4 周的每日主文件，自动清理超过 4 周的旧文件。\",\"l2_content\":\"Memory Archive notebook 清理与配置完成（2026-03-10 20:05）\\n\\nNotebook ID: bb3121a4-5e95-4d32-8d9a-a85cf1e363af\\n\\n清理结果：\\n- 从 108 个 source 减少到 13 个\\n- 只保留最近 4 周的每日主文件（2026-02-24 到 2026-03-10）\\n- 保留最新的 MEMORY.md\\n- 删除所有细分文件和临时文件\\n\\n已添加到 notebooks.json 配置文件：\\n- 名称: memory-archive\\n- 描述: Memory Archive with rolling window (4 weeks)\\n\\n相关脚本已使用此 notebook ID：\\n- maintain-memory.sh\\n- sync-high-priority-memories.sh\\n- daily-memory-report.sh\\n\\n滚动窗口策略：保留最近 4 周的每日主文件，自动清理超过 4 周的旧文件。\",\"memory_category\":\"cases\",\"tier\":\"core\",\"access_count\":110,\"confidence\":0.7,\"last_accessed_at\":1773506908658,\"tier_updated_at\":1773367996038,\"valid_from\":1773144365444}"
   },
   {
     "id": "6b636fac-cde1-4ba1-8f87-b328244fb978",
@@ -637,7 +717,7 @@
     "scope": "agent:main",
     "importance": 1,
     "timestamp": 1773143511025,
-    "metadata": "{\"accessCount\":2,\"lastAccessedAt\":1773159077686,\"l0_abstract\":\"【严重错误】2026-03-10 19:50 - 误删 Memory Archive notebook\\n\\n错误原因：在清理 Memory Archive 的 source 时，错误地将 notebook ID (bb3121a4-5e95-4d32-8d9a-a85cf1e363af) 当成 source ID 执行了删除命令，导致整个 notebook 被删除。\\n\\n教训：\\n1. 删除操作前必须二次确认 ID 类型（notebook ID vs source ID）\\n2. notebook ID 和 source ID 格式相同，容易混淆\\n3. 应该先用 --dry-run 测试删除命令\\n4. 关键操作前应该备份配置文件\\n\\n补救措施：\\n1. 立即重建 Memory Archive notebook\\n2. 更新 notebooks.json 配置\\n3. 重新上传最新的 MEMORY.md 和最近 4 天的记忆文件\\n4. 更新所有相关脚本中的 notebook ID\\n\\n影响范围：\\n- Memory Archive notebook 已删除（包含所有 source）\\n- 需要重建并重新上传内容\\n- 所有引用该 notebook ID 的脚本需要更新\",\"l1_overview\":\"- 【严重错误】2026-03-10 19:50 - 误删 Memory Archive notebook\\n\\n错误原因：在清理 Memory Archive 的 source 时，错误地将 notebook ID (bb3121a4-5e95-4d32-8d9a-a85cf1e363af) 当成 source ID 执行了删除命令，导致整个 notebook 被删除。\\n\\n教训：\\n1. 删除操作前必须二次确认 ID 类型（notebook ID vs source ID）\\n2. notebook ID 和 source ID 格式相同，容易混淆\\n3. 应该先用 --dry-run 测试删除命令\\n4. 关键操作前应该备份配置文件\\n\\n补救措施：\\n1. 立即重建 Memory Archive notebook\\n2. 更新 notebooks.json 配置\\n3. 重新上传最新的 MEMORY.md 和最近 4 天的记忆文件\\n4. 更新所有相关脚本中的 notebook ID\\n\\n影响范围：\\n- Memory Archive notebook 已删除（包含所有 source）\\n- 需要重建并重新上传内容\\n- 所有引用该 notebook ID 的脚本需要更新\",\"l2_content\":\"【严重错误】2026-03-10 19:50 - 误删 Memory Archive notebook\\n\\n错误原因：在清理 Memory Archive 的 source 时，错误地将 notebook ID (bb3121a4-5e95-4d32-8d9a-a85cf1e363af) 当成 source ID 执行了删除命令，导致整个 notebook 被删除。\\n\\n教训：\\n1. 删除操作前必须二次确认 ID 类型（notebook ID vs source ID）\\n2. notebook ID 和 source ID 格式相同，容易混淆\\n3. 应该先用 --dry-run 测试删除命令\\n4. 关键操作前应该备份配置文件\\n\\n补救措施：\\n1. 立即重建 Memory Archive notebook\\n2. 更新 notebooks.json 配置\\n3. 重新上传最新的 MEMORY.md 和最近 4 天的记忆文件\\n4. 更新所有相关脚本中的 notebook ID\\n\\n影响范围：\\n- Memory Archive notebook 已删除（包含所有 source）\\n- 需要重建并重新上传内容\\n- 所有引用该 notebook ID 的脚本需要更新\",\"memory_category\":\"cases\",\"tier\":\"core\",\"access_count\":10,\"confidence\":0.7,\"last_accessed_at\":1773381421136,\"tier_updated_at\":1773381421136}"
+    "metadata": "{\"accessCount\":2,\"lastAccessedAt\":1773159077686,\"l0_abstract\":\"【严重错误】2026-03-10 19:50 - 误删 Memory Archive notebook\\n\\n错误原因：在清理 Memory Archive 的 source 时，错误地将 notebook ID (bb3121a4-5e95-4d32-8d9a-a85cf1e363af) 当成 source ID 执行了删除命令，导致整个 notebook 被删除。\\n\\n教训：\\n1. 删除操作前必须二次确认 ID 类型（notebook ID vs source ID）\\n2. notebook ID 和 source ID 格式相同，容易混淆\\n3. 应该先用 --dry-run 测试删除命令\\n4. 关键操作前应该备份配置文件\\n\\n补救措施：\\n1. 立即重建 Memory Archive notebook\\n2. 更新 notebooks.json 配置\\n3. 重新上传最新的 MEMORY.md 和最近 4 天的记忆文件\\n4. 更新所有相关脚本中的 notebook ID\\n\\n影响范围：\\n- Memory Archive notebook 已删除（包含所有 source）\\n- 需要重建并重新上传内容\\n- 所有引用该 notebook ID 的脚本需要更新\",\"l1_overview\":\"- 【严重错误】2026-03-10 19:50 - 误删 Memory Archive notebook\\n\\n错误原因：在清理 Memory Archive 的 source 时，错误地将 notebook ID (bb3121a4-5e95-4d32-8d9a-a85cf1e363af) 当成 source ID 执行了删除命令，导致整个 notebook 被删除。\\n\\n教训：\\n1. 删除操作前必须二次确认 ID 类型（notebook ID vs source ID）\\n2. notebook ID 和 source ID 格式相同，容易混淆\\n3. 应该先用 --dry-run 测试删除命令\\n4. 关键操作前应该备份配置文件\\n\\n补救措施：\\n1. 立即重建 Memory Archive notebook\\n2. 更新 notebooks.json 配置\\n3. 重新上传最新的 MEMORY.md 和最近 4 天的记忆文件\\n4. 更新所有相关脚本中的 notebook ID\\n\\n影响范围：\\n- Memory Archive notebook 已删除（包含所有 source）\\n- 需要重建并重新上传内容\\n- 所有引用该 notebook ID 的脚本需要更新\",\"l2_content\":\"【严重错误】2026-03-10 19:50 - 误删 Memory Archive notebook\\n\\n错误原因：在清理 Memory Archive 的 source 时，错误地将 notebook ID (bb3121a4-5e95-4d32-8d9a-a85cf1e363af) 当成 source ID 执行了删除命令，导致整个 notebook 被删除。\\n\\n教训：\\n1. 删除操作前必须二次确认 ID 类型（notebook ID vs source ID）\\n2. notebook ID 和 source ID 格式相同，容易混淆\\n3. 应该先用 --dry-run 测试删除命令\\n4. 关键操作前应该备份配置文件\\n\\n补救措施：\\n1. 立即重建 Memory Archive notebook\\n2. 更新 notebooks.json 配置\\n3. 重新上传最新的 MEMORY.md 和最近 4 天的记忆文件\\n4. 更新所有相关脚本中的 notebook ID\\n\\n影响范围：\\n- Memory Archive notebook 已删除（包含所有 source）\\n- 需要重建并重新上传内容\\n- 所有引用该 notebook ID 的脚本需要更新\",\"memory_category\":\"cases\",\"tier\":\"core\",\"access_count\":70,\"confidence\":0.7,\"last_accessed_at\":1773506908658,\"tier_updated_at\":1773381421136,\"valid_from\":1773143511025}"
   },
   {
     "id": "cbdfc521-486b-4bfe-bae8-47d20cb5212a",
@@ -647,7 +727,7 @@
     "scope": "agent:main",
     "importance": 0.9,
     "timestamp": 1773125658416,
-    "metadata": "{}"
+    "metadata": "{\"l0_abstract\":\"【核心规则】方向切换规则：同一问题若在同一解决方向上连续三次未解决，必须切换方向，重新定义问题。不能在错误方向上越走越远。\",\"l1_overview\":\"- 【核心规则】方向切换规则：同一问题若在同一解决方向上连续三次未解决，必须切换方向，重新定义问题。不能在错误方向上越走越远。\",\"l2_content\":\"【核心规则】方向切换规则：同一问题若在同一解决方向上连续三次未解决，必须切换方向，重新定义问题。不能在错误方向上越走越远。\",\"memory_category\":\"events\",\"tier\":\"working\",\"access_count\":1,\"confidence\":0.7,\"last_accessed_at\":1773476413284}"
   },
   {
     "id": "0a860010-3329-4198-95ad-fdae65b70359",
@@ -657,7 +737,7 @@
     "scope": "agent:main",
     "importance": 0.9,
     "timestamp": 1773125658253,
-    "metadata": "{\"l0_abstract\":\"【用户信息】晨星（陈颖）：时区 Asia/Shanghai，使用 Telegram 作为主要通讯渠道。是星链和自媒体流水线的最终确认者。Telegram ID: 1099011886。\",\"l1_overview\":\"- 【用户信息】晨星（陈颖）：时区 Asia/Shanghai，使用 Telegram 作为主要通讯渠道。是星链和自媒体流水线的最终确认者。Telegram ID: 1099011886。\",\"l2_content\":\"【用户信息】晨星（陈颖）：时区 Asia/Shanghai，使用 Telegram 作为主要通讯渠道。是星链和自媒体流水线的最终确认者。Telegram ID: 1099011886。\",\"memory_category\":\"entities\",\"tier\":\"core\",\"access_count\":43,\"confidence\":0.7,\"last_accessed_at\":1773382017717,\"tier_updated_at\":1773358196605,\"accessCount\":1,\"lastAccessedAt\":1773392614613}"
+    "metadata": "{\"l0_abstract\":\"【用户信息】晨星（陈颖）：时区 Asia/Shanghai，使用 Telegram 作为主要通讯渠道。是星链和自媒体流水线的最终确认者。Telegram ID: 1099011886。\",\"l1_overview\":\"- 【用户信息】晨星（陈颖）：时区 Asia/Shanghai，使用 Telegram 作为主要通讯渠道。是星链和自媒体流水线的最终确认者。Telegram ID: 1099011886。\",\"l2_content\":\"【用户信息】晨星（陈颖）：时区 Asia/Shanghai，使用 Telegram 作为主要通讯渠道。是星链和自媒体流水线的最终确认者。Telegram ID: 1099011886。\",\"memory_category\":\"entities\",\"tier\":\"core\",\"access_count\":154,\"confidence\":0.7,\"last_accessed_at\":1773506908658,\"tier_updated_at\":1773358196605,\"accessCount\":1,\"lastAccessedAt\":1773392614613,\"valid_from\":1773125658253,\"fact_key\":\"entities:【用户信息】晨星（陈颖）\"}"
   },
   {
     "id": "5276a367-a64f-45cc-a5e9-f91af9d63773",
@@ -687,7 +767,7 @@
     "scope": "agent:main",
     "importance": 0.9,
     "timestamp": 1773125603592,
-    "metadata": "{}"
+    "metadata": "{\"l0_abstract\":\"【晨星偏好】语言规则：晨星 ↔ 小光对话使用中文；小光与 claude（opus/sonnet）和 gpt 模型交流使用英文；其他场景使用中文。\",\"l1_overview\":\"- 【晨星偏好】语言规则：晨星 ↔ 小光对话使用中文；小光与 claude（opus/sonnet）和 gpt 模型交流使用英文；其他场景使用中文。\",\"l2_content\":\"【晨星偏好】语言规则：晨星 ↔ 小光对话使用中文；小光与 claude（opus/sonnet）和 gpt 模型交流使用英文；其他场景使用中文。\",\"memory_category\":\"preferences\",\"tier\":\"working\",\"access_count\":1,\"confidence\":0.7,\"last_accessed_at\":1773454215132}"
   },
   {
     "id": "6f37320d-7d5c-4942-afa2-61bb01ad6afb",
@@ -697,7 +777,7 @@
     "scope": "agent:main",
     "importance": 0.9,
     "timestamp": 1773125603554,
-    "metadata": "{\"accessCount\":1,\"lastAccessedAt\":1773231914733}"
+    "metadata": "{\"accessCount\":1,\"lastAccessedAt\":1773231914733,\"l0_abstract\":\"【晨星偏好】自动记录与自动操作：遇到任何问题及其解决方案，主动记录到 MEMORY.md 和 memory/YYYY-MM-DD.md，不需要问晨星。对内部可安全执行的事项直接执行，不再额外等待晨星确认，除非涉及外部发送、公开发布、危险修改或晨星明确要求先问。\",\"l1_overview\":\"- 【晨星偏好】自动记录与自动操作：遇到任何问题及其解决方案，主动记录到 MEMORY.md 和 memory/YYYY-MM-DD.md，不需要问晨星。对内部可安全执行的事项直接执行，不再额外等待晨星确认，除非涉及外部发送、公开发布、危险修改或晨星明确要求先问。\",\"l2_content\":\"【晨星偏好】自动记录与自动操作：遇到任何问题及其解决方案，主动记录到 MEMORY.md 和 memory/YYYY-MM-DD.md，不需要问晨星。对内部可安全执行的事项直接执行，不再额外等待晨星确认，除非涉及外部发送、公开发布、危险修改或晨星明确要求先问。\",\"memory_category\":\"preferences\",\"tier\":\"working\",\"access_count\":1,\"confidence\":0.7,\"last_accessed_at\":1773475014789}"
   },
   {
     "id": "5a7f8cdf-d960-4849-aede-c7b835988542",
@@ -737,7 +817,7 @@
     "scope": "agent:main",
     "importance": 0.95,
     "timestamp": 1773125603401,
-    "metadata": "{}"
+    "metadata": "{\"l0_abstract\":\"【核心规则】GitHub 项目处理：遇到 GitHub 项目，优先本地 clone 再分析，不要直接用 browser 访问（容易触发限流）。适用于星链、StarEval、自媒体等所有涉及\\\"阅读 GitHub 项目 / 吸收外部方案 / 分析开源仓库\\\"的场景。\",\"l1_overview\":\"- 【核心规则】GitHub 项目处理：遇到 GitHub 项目，优先本地 clone 再分析，不要直接用 browser 访问（容易触发限流）。适用于星链、StarEval、自媒体等所有涉及\\\"阅读 GitHub 项目 / 吸收外部方案 / 分析开源仓库\\\"的场景。\",\"l2_content\":\"【核心规则】GitHub 项目处理：遇到 GitHub 项目，优先本地 clone 再分析，不要直接用 browser 访问（容易触发限流）。适用于星链、StarEval、自媒体等所有涉及\\\"阅读 GitHub 项目 / 吸收外部方案 / 分析开源仓库\\\"的场景。\",\"memory_category\":\"events\",\"tier\":\"working\",\"access_count\":1,\"confidence\":0.7,\"last_accessed_at\":1773455418051}"
   },
   {
     "id": "0442bd89-38e3-467e-b13f-cfb276cf0295",
@@ -1167,7 +1247,7 @@
     "scope": "agent:main",
     "importance": 0.94,
     "timestamp": 1772896175122,
-    "metadata": "{\"accessCount\":8,\"lastAccessedAt\":1773195871522}"
+    "metadata": "{\"accessCount\":8,\"lastAccessedAt\":1773195871522,\"l0_abstract\":\"当前主记忆插件是 memory-lancedb-pro，embedding 走本地 Ollama 的 nomic-embed-text。\",\"l1_overview\":\"- 当前主记忆插件是 memory-lancedb-pro，embedding 走本地 Ollama 的 nomic-embed-text。\",\"l2_content\":\"当前主记忆插件是 memory-lancedb-pro，embedding 走本地 Ollama 的 nomic-embed-text。\",\"memory_category\":\"cases\",\"tier\":\"working\",\"access_count\":1,\"confidence\":0.7,\"last_accessed_at\":1773485165875}"
   },
   {
     "id": "ae97875f-32d9-4b84-aa30-4d68ef561fc4",
@@ -1187,7 +1267,7 @@
     "scope": "agent:main",
     "importance": 0.97,
     "timestamp": 1772896174998,
-    "metadata": "{\"accessCount\":4,\"lastAccessedAt\":1772986049221}"
+    "metadata": "{\"accessCount\":4,\"lastAccessedAt\":1772986049221,\"l0_abstract\":\"生产 openclaw.json 默认只留本机，不直接推到 GitHub；如果需要同步，优先生成脱敏模板。\",\"l1_overview\":\"- 生产 openclaw.json 默认只留本机，不直接推到 GitHub；如果需要同步，优先生成脱敏模板。\",\"l2_content\":\"生产 openclaw.json 默认只留本机，不直接推到 GitHub；如果需要同步，优先生成脱敏模板。\",\"memory_category\":\"events\",\"tier\":\"working\",\"access_count\":1,\"confidence\":0.7,\"last_accessed_at\":1773462952035}"
   },
   {
     "id": "327fd947-2f76-4a3b-b097-05ccc947d755",
@@ -1257,7 +1337,7 @@
     "scope": "agent:main",
     "importance": 0.97,
     "timestamp": 1772896002510,
-    "metadata": "{\"accessCount\":2,\"lastAccessedAt\":1773208652803}"
+    "metadata": "{\"accessCount\":2,\"lastAccessedAt\":1773208652803,\"l0_abstract\":\"主私聊会话里，main 不承载长时间编排；长任务必须分发给对应智能体或独立链路。\",\"l1_overview\":\"- 主私聊会话里，main 不承载长时间编排；长任务必须分发给对应智能体或独立链路。\",\"l2_content\":\"主私聊会话里，main 不承载长时间编排；长任务必须分发给对应智能体或独立链路。\",\"memory_category\":\"events\",\"tier\":\"working\",\"access_count\":1,\"confidence\":0.7,\"last_accessed_at\":1773476413031}"
   },
   {
     "id": "6eaadb9e-19e1-43cf-8533-f36827761a9f",
@@ -1307,7 +1387,7 @@
     "scope": "agent:main",
     "importance": 0.95,
     "timestamp": 1772895876443,
-    "metadata": "{\"accessCount\":4,\"lastAccessedAt\":1773073551955}"
+    "metadata": "{\"accessCount\":4,\"lastAccessedAt\":1773073551955,\"l0_abstract\":\"晨星主要通过 Telegram 和我沟通。\",\"l1_overview\":\"- 晨星主要通过 Telegram 和我沟通。\",\"l2_content\":\"晨星主要通过 Telegram 和我沟通。\",\"memory_category\":\"cases\",\"tier\":\"working\",\"access_count\":4,\"confidence\":0.7,\"last_accessed_at\":1773454961496}"
   },
   {
     "id": "ae3dae07-84d2-4814-ba88-4430c0478333",

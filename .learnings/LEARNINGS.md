@@ -383,3 +383,29 @@ Before committing, check whether the edited path is inside the current repositor
 - Source: user_feedback
 - Related Files: shared-context/THESIS.md, memory/2026-03-17.md
 ---
+
+## [LRN-20260318-001] correction
+
+**Logged**: 2026-03-18T13:15:00Z
+**Priority**: medium
+**Status**: pending
+**Area**: docs
+
+### Summary
+区分三类信息源：会话必读 workspace 文件、OpenClaw 本地 docs、以及 openclaw-docs/NotebookLM 笔记，不要混成“都在查本地文件”。
+
+### Details
+用户指出“不是应该查 openclaw-doc 笔记吗”。本次响应前读取了 SOUL.md/USER.md/MEMORY.md 等 workspace 文件，这是 AGENTS.md 的每会话硬要求；随后为 OpenClaw web 配置问题查询了本机 docs 目录 `/opt/homebrew/lib/node_modules/openclaw/docs`，这也符合“OpenClaw 行为/配置先查本地 docs”的规则。但在解释中没有把这三层来源区分清楚，容易让用户感觉我在绕开 openclaw-docs 笔记体系。
+
+### Suggested Action
+以后明确说明：
+1. workspace 文件 = 会话初始化必读；
+2. OpenClaw 行为/命令/配置 = 先查本地 docs；
+3. openclaw-docs / NotebookLM = 用于内部总结、深研、版本迁移经验与非显性知识，不是每个简单配置问答都必须先走。
+
+### Metadata
+- Source: user_feedback
+- Related Files: AGENTS.md, .learnings/LEARNINGS.md
+- Tags: docs, notebooklm, source-of-truth, correction
+
+---
