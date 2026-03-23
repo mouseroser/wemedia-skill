@@ -101,7 +101,6 @@ wemedia agent 完成创作后，必须输出以下标准格式，供 main 调用
 ## Model Rule of Thumb
 
 - **Step 2B 执行计划**：`claude` agent，专注内容策略和叙事结构
-- **Step 2D 仲裁 / L 级挑刺**：`openai` agent（GPT-5.4）
 - **日常内容生产**：默认 `minimax` 足够，小红书正文、改写、标题、摘要、标签均可
 - 不要把整条链路压成单模：前置定义、搜索判断、风险挑刺、合规复核仍交给 `gemini / Claude Code / gpt`
 - 高推理模型优先用在"定方向、抓偏差、控风险"
