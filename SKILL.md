@@ -140,11 +140,14 @@ sessions_spawn(agentId: "<agent>", mode: "run", task: "<任务+上下文>")
 
 ## Notification Rules
 
-**核心原则**：sub-agent 只返回结果给 main，**不自己推群**。所有群通知由 main 统一发出。
+**核心原则**：sub-agent 执行 agent 自己推群（职能群 + 监控群），main 统一监控群兜底。
 
-**原因**：`sessions_spawn(mode="run")` 创建的是完全隔离的会话，无法向 Telegram 群组推送消息（sessions_spawn 硬性拒绝通道投递参数）。官方推荐由 main 集中推送。
+**原因**：`sessions_spawn` 的 isolated session 有 Telegram 群 binding，sub-agent 可直接调用 message 工具推群。工具配置已设为 `alsoAllow: [message]`。
 
-**main 通知规则**（每个 step 完成后执行）：
+**通知规则**（每个 step 完成后执行）：
+- **职能群**：执行 agent 发送到自己的职能群
+- **监控群**：执行 agent 同时发送到监控群 (-5131273722)
+- **main**：负责补发缺失通知、最终交付、告警通知
 
 | 步骤 | 发往职能群 | 发往监控群 | 发送时机 |
 |------|-----------|-----------|---------|
