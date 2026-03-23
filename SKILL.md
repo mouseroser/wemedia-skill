@@ -195,7 +195,28 @@ wemedia subagent（Step 3 创作）
     → 写正文到 drafts/{A|B|C}/{标识}.txt
     ↓
 wemedia subagent（Step 5 配图）
-    → 临时 notebook 流程生成配图 → drafts/generated/{A|B|C}/{标识}_sq.jpg
+→ **临时 notebook 流程生成配图**（不能用 shared media-research notebook，必须每篇单独创建临时 notebook）
+→ drafts/generated/{A|B|C}/{标识}_sq.jpg
+
+**配图生成步骤（必须遵循）**：
+1. `notebooklm notebooks add --name "temp-{标识}" --desc "配图临时notebook"` 创建临时 notebook
+2. 获取临时 notebook ID
+3. 将正文 txt 文件作为 source：`notebooklm source add --notebook {temp_id} --path {正文.txt}`
+4. 生成配图：
+   ```
+   notebooklm generate infographic \
+     --notebook {temp_id} \
+     --orientation square \
+     --style bento-grid \
+     --language zh_Hans \
+     --detail detailed \
+     --wait \
+     "{配图描述}"
+   ```
+5. 下载图片到当前目录，手动重命名为 `{标识}_sq.png`，移动到 `drafts/generated/{A|B|C}/`
+6. 删除临时 notebook：`notebooklm notebooks remove --notebook {temp_id}`
+
+**禁止**：不得使用 media-research notebook（032a95b5...）直接生成配图，必须走临时 notebook 流程。
     ↓
 wemedia subagent（Step 7.5 发布）
     → 直接调用 media-tools/publish_pipeline.py 执行发布
