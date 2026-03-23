@@ -60,3 +60,47 @@ openclaw gateway restart
 
 ## 建议
 当前建议继续保持 canary 运行，并把本报告作为 B 阶段整理的基线。若后续继续清理 runtime 脏改动，应始终保证可以回退到 `canary-A-20260323-2126`。
+
+---
+
+## 最终状态快照（2026-03-23 21:39）
+
+### runtime 分支状态
+- 当前分支：`adapt/beta9-selective-20260323`
+- 当前 canary 仍在线运行
+- runtime worktree：**无未提交改动**
+
+### 关键提交（按时间顺序）
+1. `20e767d` — `fix: sanitize reflection lines before prompt injection`
+2. `e7c2b69` — `fix: declare apache-arrow as a direct runtime dependency`
+3. `6a4c21d` — `test: align beta9 adaptation with local runtime policy`
+4. `e7ef25d` — `chore: sync lockfile after apache-arrow runtime dependency`
+5. `e065e1d` — `runtime: preserve local embedding json retry hardening`
+6. `2d8c1a8` — `runtime: preserve local layer3 fallback tuning`
+
+### 已正式收编的本地补丁
+- `src/embedder.ts`：改为原生 `fetch` 调本地 Ollama embedding
+- `src/llm-client.ts`：4F.1 / 4F.4 超时与 JSON 防御解析
+- `src/reflection-retry.ts`：4F.2 时间感知 retry
+- `src/tools.ts`：4F.3 / 4F.5 Layer 3 阈值、截断、timeout 与 list 输出策略
+
+### 最终验收
+- `memory-reflection.test.mjs`：**33 / 33 通过**
+- `plugin-manifest-regression.mjs`：**通过**
+- gateway 重启后：
+  - `memory_stats` ✅
+  - `memory_list` ✅
+  - `memory_recall` ✅
+
+### 回退锚点仍有效
+如需回退到最早通过上线验收的 A 状态：
+
+```bash
+cd ~/.openclaw/runtime-plugins/memory-lancedb-pro
+git checkout canary-A-20260323-2126
+openclaw gateway restart
+```
+
+### 备注
+- 本轮完成后，beta.9 关键增量已定向吸收
+- 运行树从“历史脏改动”状态收口为“正式 git 历史 + 可回退 canary”状态
