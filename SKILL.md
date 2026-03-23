@@ -140,37 +140,40 @@ sessions_spawn(agentId: "<agent>", mode: "run", task: "<任务+上下文>")
 
 ## Notification Rules
 
-**核心原则**：sub-agent 执行 agent 自己推群（职能群 + 监控群），main 统一监控群兜底。
+**核心原则**：sub-agent 只返回结果给 main，**不自己推群**。所有群通知由 main 统一发出。
 
-**原因**：`sessions_spawn` 的 isolated session 有 Telegram 群 binding，sub-agent 可直接调用 message 工具推群。工具配置已设为 `alsoAllow: [message]`。
+**根因**：`sessions_spawn` 创建的 isolated session 默认没有 `message` 工具权限，配置干预也无法恢复。sub-agent 推群从架构上不可行。
+
+### main 通知规则
+
+- main 是唯一可靠通知节点
+- 向职能群 + 监控群双推
+- 负责：监控群可见性、补发缺失通知、最终交付通知、告警通知
 
 ### 通知类型（三类必须覆盖）
 
 | 类型 | 触发时机 | 发往 |
 |------|---------|------|
-| **START** | agent 开始执行本步骤时 | 职能群 + 监控群 |
-| **COMPLETION** | agent 完成本步骤时（含结果摘要） | 职能群 + 监控群 |
-| **FAILURE** | agent 遇到错误/卡点时 | 职能群 + 监控群 |
+| **START** | agent 开始执行本步骤时 | main 推送到职能群 + 监控群 |
+| **COMPLETION** | agent 完成本步骤时（含结果摘要） | main 推送到职能群 + 监控群 |
+| **FAILURE** | agent 遇到错误/卡点时 | main 推送到职能群 + 监控群 |
 
 ### 通知内容要求
 - START/COMPLETION 必须包含：步骤名称、本步骤做了什么、下一步是什么
 - FAILURE 必须包含：步骤名称、错误原因、已尝试的解决措施
 - 不得只发"done"、"开始"等空内容
 
-### 通知规则（每个 step 执行时）
-- **职能群**：执行 agent 发送到自己的职能群
-- **监控群**：执行 agent 同时发送到监控群 (-5131273722)
-- **main**：负责补发缺失通知、最终交付、告警通知
+### 步骤对应通知表
 
 | 步骤 | 发往职能群 | 发往监控群 | 发送时机 |
 |------|-----------|-----------|---------|
-| Step 2A Gemini | ✅ 织梦群 (-5264626153) | ✅ 监控群 (-5131273722) | 内容宪法 START + COMPLETION |
-| Step 2B Claude | ✅ 小克群 (-5101947063) | ✅ 监控群 (-5131273722) | 内容计划 START + COMPLETION |
-| Step 2C Gemini | ✅ 织梦群 (-5264626153) | ✅ 监控群 (-5131273722) | 一致性复核 START + COMPLETION |
-| Step 2D GPT | ✅ 小曼群 (-5242027093) | ✅ 监控群 (-5131273722) | 仲裁 START + COMPLETION（L 级）|
-| Step 3 wemedia | ✅ 自媒体群 (-5146160953) | ✅ 监控群 (-5131273722) | 草稿 START + COMPLETION |
-| Step 4 Gemini | ✅ 织梦群 (-5264626153) | ✅ 监控群 (-5131273722) | 审查 START + COMPLETION |
-| Step 5 配图 | ✅ 自媒体群 (-5146160953) | ✅ 监控群 (-5131273722) | 配图 START + COMPLETION |
+| Step 2A Gemini | ✅ 织梦群 (-5264626153) | ✅ 监控群 (-5131273722) | main 代发 |
+| Step 2B Claude | ✅ 小克群 (-5101947063) | ✅ 监控群 (-5131273722) | main 代发 |
+| Step 2C Gemini | ✅ 织梦群 (-5264626153) | ✅ 监控群 (-5131273722) | main 代发 |
+| Step 2D GPT | ✅ 小曼群 (-5242027093) | ✅ 监控群 (-5131273722) | main 代发（L 级）|
+| Step 3 wemedia | ✅ 自媒体群 (-5146160953) | ✅ 监控群 (-5131273722) | main 代发 |
+| Step 4 Gemini | ✅ 织梦群 (-5264626153) | ✅ 监控群 (-5131273722) | main 代发 |
+| Step 5 配图 | ✅ 自媒体群 (-5146160953) | ✅ 监控群 (-5131273722) | main 代发 |
 
 ## When To Go Deeper
 
