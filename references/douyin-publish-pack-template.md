@@ -41,6 +41,12 @@ python3 ~/.openclaw/skills/douyin-skill/scripts/publish_douyin.py \
   --pack ~/.openclaw/workspace/intel/collaboration/media/wemedia/douyin/{content_id}.md \
   --step check_duplicate
 
+# 命中以下任一条件会阻断：
+# - 作品管理页已存在同标题
+# - 本地 publish-ledger 已存在相同 content_id
+# - 本地 publish-ledger 已存在相同 video_path
+# - 本地 publish-ledger 已存在相同 title
+
 python3 ~/.openclaw/skills/douyin-skill/scripts/publish_douyin.py \
   --pack ~/.openclaw/workspace/intel/collaboration/media/wemedia/douyin/{content_id}.md \
   --step full
