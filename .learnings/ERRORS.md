@@ -947,6 +947,19 @@ zsh:cd:1: no such file or directory: /Users/lucifinil_chen/.openclaw/skills/xiao
 - **调查**: api.minimaxi.com 返回 404 Not Found，疑似 API endpoint 变更
 - **状态**: 已报告晨星，等待指示
 
+## 2026-03-24 Gemini agentTurn + tool call 400（thought_signature 缺失）
+
+- **现象**: `media-signal-evening` 在多通道 `channel` 问题修复后，改为再次手动重跑时，Gemini provider 返回 400：`Function call is missing a thought_signature in functionCall parts`。
+- **关键信号**: 报错点明确落在工具调用（`default_api:read`），不是文件不存在，也不是路径错误。
+- **现场验证**:
+  - `DAILY-SIGNAL-BRIEF.md` / `HOT-SCAN-INBOX.md` / `HOT-QUEUE.md` 三个路径都存在且可读。
+  - 同一批路径改用 Sonnet 跑 cron 时可继续执行，因此不是 workspace 路径配置问题。
+- **结论**: 这是 Gemini provider / tool-calling 兼容性问题，不是用户配置文件里的路径写错。
+- **临时处置**: 对需要稳定 `read`/`edit`/`message` 工具链的 cron，先切到 Sonnet / GPT；Gemini 更适合纯搜索/轻推理、少工具调用场景。
+- **教训**:
+  1. 看到 `thought_signature` 相关 400，优先判定为 provider/tool 协议问题，不要先怀疑文件路径。
+  2. 多通道问题修掉后，如果仍报 Gemini 400，要直接切模型验证，不要在原模型上空转重试。
+
 ## 2026-03-24 抖音 Smoke Test 踩坑记录
 
 ### 问题 1：browser tool upload 路径限制
@@ -984,3 +997,91 @@ zsh:cd:1: no such file or directory: /Users/lucifinil_chen/.openclaw/skills/xiao
 - 视频文件：必须放在 `/tmp/openclaw/uploads/`
 - 封面文件：同上
 - OpenClaw Browser targetId：需要先 navigate 获取当前 tab 的 targetId
+
+## 2026-03-24 gemini agent 工具缺失错误：html2text
+
+- **现象**: gemini agent 在执行 web research 时，`html2text` 命令不存在，导致工具调用失败，最终 agent 超时退出。
+- **错误信息**: `zsh:1: command not found: html2text`
+- **影响**: gemini agent 搜索任务完全失败，无任何输出。
+- **教训**:
+  1. gemini agent 的 tool-calling 环境可能缺少系统 CLI 工具（如 html2text、lynx 等）
+  2. 建议在 cron 脚本或 tool calling 环境里用之前先检查依赖是否存在，或改用纯 JSON 输出的 web_fetch
+  3. 这个错误导致研究层失败，整个 M 级流水线卡在 Step 1.5
+- **处置**: 需要重新运行研究步骤，考虑改用 web_fetch 或在 gemini 侧使用其他工具
+
+
+## 2026-03-24 小红书流水线 / cron 多坑记录
+
+### 坑1：gemini agent html2text 缺失
+- **现象**：gemini agent 在执行 web research 时调用 `html2text` CLI 工具失败，导致整条搜索链断裂，最终 agent 超时退出。
+- **根因**：gemini 模型在 tool calling 时自动选择了 `html2text` 做 HTML→markdown 转换，但运行环境里没有安装。
+- **已处置**：晨星已安装 `html2text`。
+- **教训**：gemini agent 的工具链对系统 CLI 有隐式依赖，需确保环境中所有常用 CLI 工具可用。
+
+### 坑2：gemini 模型 allowlist 限制
+- **现象**：spawn 时用 `gemini/gemini-3.1-pro-high` 报 "model not allowed"。
+- **根因**：OpenClaw 配置里 gemini 只允许 `-preview` 后缀的模型，不允许 `-high`。
+- **教训**：gemini agent spawn 统一用 `gemini/gemini-3.1-pro-preview`，不要用 `-high`。
+
+### 坑3：小红书标题逐字计数
+- **现象**：`publish_pipeline.py` 标题验证失败，"23字"实际算出来更多（Latin 字母逐字计算）。
+- **根因**：脚本逐字计数，中文字符=1，Latin 字符也=1（不是按字节），导致看似接近的字数实际超限。
+- **示例**："效率的反噬：OpenClaw核心漏洞与升级实录" → 23字 → 超限
+- **教训**：中文标题先手动压缩到 18 字以内，预留余量；最终用脚本验证。
+- **已记录**：未来创作流程中，wemedia subagent 输出标题前先压缩到 ≤18 字。
+
+### 坑4：media-signal crons 超时问题
+- **现象**：
+  - `media-signal-noon`：error（Gemini 400 thought_signature → 已切 Sonnet）
+  - `media-signal-evening`：超时 1062s（远超 300s 配置）仍未完成 → 模型切 MiniMax → 仍超时
+- **根因**：cron payload 里的 prompt 任务量超过 5 分钟预算，但 cron 系统的硬超时 (300s) 在 job timeout 之前就杀掉了进程。
+- **已处置**：
+  - 两个 cron 均已更新为 `anthropic/claude-sonnet-4-6` + 300s timeout
+  - 后续需要重新评估 prompt 任务量，或延长 timeout 到 600s
+- **教训**：信号扫描类 crons 的 prompt 需要严格控制任务范围，避免单轮跑太多搜索+写入操作。
+
+## 2026-03-25
+
+### OpenClaw cron 子命令错误
+
+**错误**：
+- `openclaw cron logs` → `error: unknown command 'logs'`
+- `openclaw cron info` → `error: unknown command 'info'`
+
+**正确子命令**：
+- `openclaw cron list` — 列出所有 cron 任务
+- `openclaw cron runs --id <job-id> --limit N` — 查看指定任务的历史运行记录
+- `openclaw cron run <job-id>` — 立即运行任务（debug）
+- `openclaw cron status` — 查看调度器状态
+
+**教训**：
+不要猜测 CLI 子命令，先 `openclaw cron --help` 确认可用命令。
+## [ERR-20260325-001] memory_forget_scope_requirement
+
+**Logged**: 2026-03-25T07:47:22.523217+08:00
+**Priority**: medium
+**Status**: pending
+**Area**: infra
+
+### Summary
+`memory_forget(memoryId=...)` can fail with "outside accessible scopes" unless `scope="agent:main"` is passed explicitly, even for IDs returned by `memory_list`/`memory_recall`.
+
+### Error
+```
+Memory deletion failed: Memory <id> is outside accessible scopes
+```
+
+### Context
+- Operation attempted: deleting duplicate memories by exact ID
+- Initial call omitted `scope`
+- Same deletion succeeded after retrying with `scope: "agent:main"`
+
+### Suggested Fix
+When deleting known memories in the main scope, always pass `scope="agent:main"` with `memory_forget` to avoid ambiguous/default-scope failures.
+
+### Metadata
+- Reproducible: yes
+- Related Files: ~/.openclaw/workspace/.learnings/ERRORS.md
+- See Also: 783cc26d-18b3-416f-a023-b5204939fdd4
+
+---
