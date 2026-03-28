@@ -31,7 +31,7 @@
   1. 📋 判断内容类型 → S / M / L
   2. 📋 确定目标平台 → 小红书 / 抖音 / 知乎 / 多平台
   3. 📋 确定内容形式 → 图文 / 视频脚本 / 问答 / 种草笔记
-  4. 输出选题单 → 自媒体群 + 监控群
+  4. 输出选题单 → 自媒体群自推；监控群终态/异常由 main
 
        ┌──── S 级 ────┐
        │ ⚡ 快速通道   │────────────────────────────► Step 3
@@ -48,42 +48,52 @@
 
   核心思想：
     先由 Gemini 对齐“内容问题定义”
+    再由 GPT/OpenAI 定义“内容宪法边界”
     再由 Claude Code 产出内容策略与执行计划
-    再由 Gemini 复核是否跑偏
-    仅在 L 级 / 高风险 / 明显分歧时启用 GPT 做审查/仲裁
+    最后由 Gemini 复核是否跑偏
+    仅在高风险 / 明显分歧时再启用额外仲裁
 
   M 级：
     1️⃣ Gemini → 内容颗粒度对齐
        • 目标受众
        • 平台定位
        • 选题角度
-       • 风格边界
-       • 合规风险
-       → 输出「内容宪法」
-       → 织梦群 + 监控群
+       • 问题 framing
+       • 内容颗粒度
+       → 输出「颗粒度对齐单」
+       → 织梦群自推；监控群终态/异常由 main
 
-    2️⃣ Claude Code → 内容策略/执行计划
+    2️⃣ GPT/OpenAI → 内容宪法边界
+       • 必须强调什么
+       • 必须避免什么
+       • 不可夸大点
+       • 风险边界 / 表达边界
+       → 输出「内容宪法」
+       → 小曼群自推；监控群终态/异常由 main
+
+    3️⃣ Claude Code → 内容策略/执行计划
        • 内容结构
        • 论点展开顺序
        • 平台适配策略
        • 素材/证据需求
-       → 小克群 + 监控群
+       → 小克群自推；监控群终态/异常由 main
 
-    3️⃣ Gemini → 一致性复核
+    4️⃣ Gemini → 一致性复核
        → 输出：ALIGN / DRIFT / MAJOR_DRIFT
-       → 织梦群 + 监控群
+       → 织梦群自推；监控群终态/异常由 main
 
        ALIGN ✅      → Step 3
        DRIFT ⚠️      → Claude Code 修订 1 次 → Gemini 再复核
-       MAJOR_DRIFT ❌ → 升级 GPT 审核位
+       MAJOR_DRIFT ❌ → 升级仲裁位
 
   L 级：
-    1️⃣ Gemini → 内容宪法
-    2️⃣ Claude Code → 内容策略/执行计划
-    3️⃣ Gemini → 一致性复核
-    4️⃣ GPT → 风险挑刺 / 反方审查 / 仲裁
+    1️⃣ Gemini → 内容颗粒度对齐
+    2️⃣ GPT/OpenAI → 内容宪法边界
+    3️⃣ Claude Code → 内容策略/执行计划
+    4️⃣ Gemini → 一致性复核
+    5️⃣ GPT → 风险挑刺 / 反方审查 / 仲裁
        → 输出：GO / REVISE / BLOCK
-       → 小曼群 + 监控群
+       → 小曼群自推；监控群终态/异常由 main
 
        GO ✅      → Step 3
        REVISE ⚠️  → Claude Code 修订 1 次 → Gemini 复核
@@ -110,7 +120,7 @@
     1. 文案正文 → drafts/draft.md
     2. 配图提示词 → drafts/prompts.md（如需生图）
 
-  📋 → 自媒体群 + 监控群
+  📋 → 自媒体群自推；监控群终态/异常由 main
 
 ═══════════════════════════════════════════════════════════
   🔍 Step 4 — 内容审查（S 级可轻量）
@@ -134,7 +144,7 @@
   REVISE  → Step 4.5
   REJECT  → HALT + 通知晨星
 
-  📋 → 织梦群 + 监控群
+  📋 → 织梦群自推；监控群终态/异常由 main
 
 ═══════════════════════════════════════════════════════════
   🔧 Step 4.5 — 修改循环（max 3 rounds）
@@ -171,7 +181,7 @@
 
   无配图需求 → 跳过
 
-  📋 → 自媒体群 + 监控群
+  📋 → 自媒体群自推；监控群终态/异常由 main
 
 ═══════════════════════════════════════════════════════════
   🎭 Step 5.5 — 衍生内容生成（L 级推荐）
@@ -185,7 +195,7 @@
     • quiz
     • infographic
 
-  📋 → 自媒体群 + 监控群
+  📋 → 自媒体群自推；监控群终态/异常由 main
 
 ═══════════════════════════════════════════════════════════
   📱 Step 6 — 多平台适配 + 排期
@@ -199,7 +209,7 @@
     • 更新 content-calendar
     • 给出发布时间建议
 
-  📋 → 自媒体群 + 监控群
+  📋 → 自媒体群自推；监控群终态/异常由 main
 
 ═══════════════════════════════════════════════════════════
   📦 Step 7 — 晨星确认 + 交付
@@ -220,50 +230,47 @@
 
   ⛔ 未经晨星确认，绝不发布到外部平台
 
-  ✅ 晨星确认后 → main 调用 media-tools 发布：
+  ✅ 晨星确认后 → main 通知 wemedia 执行 Step 7.5：
 
-    1. 读取 wemedia 交付内容（`drafts/{A|B|C}/{标识}.txt`）
-    2. 读取配图路径（如有）
-    3. 拼装 publish_pipeline 命令
-       ```bash
-       cd ~/.openclaw/skills/media-tools
-       python3 scripts/publish_pipeline.py \
-         --title "标题" \
-         --content "正文" \
-         --image-urls "配图路径" \
-         --headless
-       ```
-    4. 发布成功后更新 HOT-QUEUE.md 状态为 ✅ 已发布
-    5. 记录帖子 ID 到监控群通知
+    1. main 下发最终发布指令与发布包路径
+    2. wemedia 读取平台适配产物与素材路径
+    3. 按平台调用执行工具
+       - 小红书 → `xiaohongshu/scripts/publish_pipeline.py`
+       - 抖音 → `douyin/scripts/publish_douyin.py`
+    4. wemedia 将结果回传给 main
+    5. main 更新 HOT-QUEUE.md 状态并推送监控通知
 
 ═══════════════════════════════════════════════════════════
-  📦 Step 7.5 — main 调用 media-tools 发布
-  Executor: ☀️ main
+  📦 Step 7.5 — wemedia 调用平台 skill 发布
+  Executor: ✍️ wemedia
+  Orchestrator: ☀️ main
 ═══════════════════════════════════════════════════════════
 
-  main 从 wemedia 交付物读取：
-    • 标题（≤20字）
-    • 正文（≤1000字）
-    • 标签（≤10个）
-    • 配图路径
+  wemedia 从发布包读取：
+    • 标题 / 正文 / 标签
+    • 配图 / 视频 / 封面路径
+    • 可见性 / 音乐等平台参数
 
-  执行发布（调用 media-tools）：
+  执行发布（按平台调用）：
     ```bash
-    cd ~/.openclaw/skills/media-tools
-    python3 scripts/publish_pipeline.py \
-      --title "..." --content "..." \
-      --image-urls "..." \
-      --headless
+    # 小红书
+    cd ~/.openclaw/skills/xiaohongshu
+    python3 scripts/publish_pipeline.py --pack /path/to/xhs-pack.md
+
+    # 抖音
+    cd ~/.openclaw/skills/douyin
+    python3 scripts/publish_douyin.py --pack /path/to/douyin-pack.md --step full
     ```
 
   收尾动作：
-    • 更新 HOT-QUEUE.md 状态 → ✅ 已发布
-    • 记录帖子 ID → 监控群通知
+    • wemedia 回传发布 / 审核结果给 main
+    • main 更新 HOT-QUEUE.md 状态 → ✅ 已发布
+    • main 记录帖子 ID / 审核状态 → 监控群通知
     • 触发 Step 8 日结（如需要）
 
   失败降级：
-    • CDP 报错 → 降级为手动发布（晨星介入）
-    • 配图失败 → 询问晨星是否跳过配图继续发布
+    • 脚本 / CDP 报错 → 由 main 降级为手动发布（晨星介入）
+    • 配图或封面缺失 → 退回 Step 6 补齐后再发布
 
 ═══════════════════════════════════════════════════════════
   🏁 END
@@ -274,9 +281,14 @@
 ═══════════════════════════════════════════════════════════
 
   默认原则：
-    • sub-agent：静默执行，结果返回 main，不自行推群
-    • main：唯一可靠通知节点，向职能群 + 监控群双推
-    • 原因：sessions_spawn 创建 isolated session，无法推送 Telegram 群消息
+    • sub-agent：默认向各自职能群自推步骤级通知（best-effort），结果同时返回 main
+    • main：监控群 + 晨星 DM 的可靠通知节点；监控群只承接终态/异常
+    • 晨星DM：不是流水账通道，只用于确认、阻塞失败、最终结果、长任务阶段摘要
+    • 如果任务本身就在晨星DM中进行，默认直接在当前对话回复，不额外重复主动 DM
+    • 原因：agent 自推只能算 best-effort，可靠通知以 main 为准
+    • `message(action="send")` 单发必须用 `target`，不要用 `targets`
+    • 同时发多个群时，按单目标串行发送多次；`targets` 只允许给 `action="broadcast"`
+    • 注意：本流程图中的推送定义是**路由说明**；真正生效的执行规则以 `skills/wemedia/SKILL.md` 的 Notification Rules 与 `agents/wemedia/AGENTS.md` 为准
 
   完成通知要求：
     • 方案类 / 调研类 / 审查类任务完成时不得只发 done

@@ -1,6 +1,6 @@
 # Xiaohongshu Publish Pack Template
 
-用于 `wemedia` 在 Step 6 产出标准小红书发布包，交给 `main` 调 `xiaohongshu` skill 执行。
+用于 `wemedia` 在 Step 6 产出标准小红书发布包；晨星在 Step 7 确认后，由 `main` 通知 `wemedia` 在 Step 7.5 调 `xiaohongshu` skill 执行。
 
 ## 填写模板
 

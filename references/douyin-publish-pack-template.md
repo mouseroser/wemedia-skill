@@ -1,6 +1,6 @@
 # Douyin Publish Pack Template
 
-用于 `wemedia` 在 Step 6 产出标准抖音发布包，交给 `main` 在 Step 7.5 调 `douyin` skill 执行。
+用于 `wemedia` 在 Step 6 产出标准抖音发布包；晨星在 Step 7 确认后，由 `main` 通知 `wemedia` 在 Step 7.5 调 `douyin` skill 执行。
 
 ## 填写模板
 
@@ -30,7 +30,7 @@
 ## 保存位置
 `~/.openclaw/workspace/intel/collaboration/media/wemedia/douyin/{content_id}.md`
 
-## main 调用示例
+## wemedia 调用示例
 
 ```bash
 python3 ~/.openclaw/skills/douyin-skill/scripts/publish_douyin.py \

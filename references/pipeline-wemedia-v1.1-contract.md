@@ -154,7 +154,7 @@ notebooklm download infographic <task-id> --artifact <artifact-id> --force
 ## 11) 通知合约
 
 - 有消息能力的 agent 应自己向职能群发送开始 / 关键进度 / 完成 / 失败
-- `main` 负责监控群、缺失补发、最终交付、告警
+- `main` 负责监控群终态/异常、最终交付、告警
 - 方案类 / 调研类 / 审查类任务完成通知不能只发 `done`，必须附带摘要 / 结论 / 下一步
 
 ## 12) 版本原则

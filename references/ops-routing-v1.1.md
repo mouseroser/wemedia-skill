@@ -2,8 +2,8 @@
 
 ## 当前激活范围
 
-- 当前激活平台：**仅小红书**
-- 抖音 / 知乎模板保留，但默认不启动
+- 当前激活平台：**小红书、抖音**
+- 知乎模板保留，但默认不启动
 - 主搜索策略：**Gemini 搜索优先**
 - 正文抓取：`web_fetch`
 - 复杂页面兜底：`browser`
@@ -34,9 +34,10 @@ main 判断：
 
 ### Step 2：Constitution-First 前置链
 - gemini：内容颗粒度对齐 / 热点判断 / 受众与标题方向
+- GPT / OpenAI：宪法边界（must / must-not、表达边界、不可夸大点、风险边界）
 - Claude Code：内容策略 / 执行计划
 - gemini：一致性复核
-- GPT：仅 L 级 / 高风险 / 明显分歧时做挑刺与仲裁
+- GPT：仅在高风险 / 明显分歧时继续做挑刺与仲裁
 - **NLM 知识查询（必做，M/L 级）**：基于 media-tools 的 media-research notebook 查询竞品和行业数据，补充差异化角度
   ```bash
   bash ~/.openclaw/skills/notebooklm/scripts/nlm-gateway.sh query \
@@ -98,12 +99,14 @@ notebooklm download infographic <task-id> \
 - main 汇总交付
 - 未经确认绝不外发
 
-### Step 7.5：main 调用 media-tools 发布
-- main 读取 wemedia 交付内容（`drafts/{A|B|C}/{标识}.txt`）
-- 读取配图路径，拼装 `publish_pipeline` 命令
-- 执行发布：`cd ~/.openclaw/skills/media-tools && python3 scripts/publish_pipeline.py ...`
-- 成功：更新 HOT-QUEUE.md 状态 → ✅ 已发布，记录帖子 ID 到监控群
-- 失败：降级为手动发布（通知晨星介入）
+### Step 7.5：main 下发确认，wemedia 执行平台发布
+- main 在 Step 7 确认后通知 wemedia 执行发布，并传入最终发布包 / 素材路径
+- wemedia 读取发布包，按平台选择执行工具：
+  - 小红书：调用 `xiaohongshu/scripts/publish_pipeline.py`
+  - 抖音：调用 `douyin/scripts/publish_douyin.py`
+- wemedia 回传发布结果给 main
+- 成功：main 更新 HOT-QUEUE.md 状态 → ✅ 已发布，并记录帖子 ID / 审核状态到监控群
+- 失败：main 降级为手动发布（通知晨星介入）
 
 ### Step 8：日结 / 周复盘
 - main 记录当天运营结论和后续动作
@@ -123,6 +126,8 @@ notebooklm download infographic <task-id> \
 - main 的通知是可靠主链路
 - sub-agent 自推仅 best-effort，不能视为可靠送达
 - 关键结果、失败、HALT、交付摘要必须由 main 保证可见
+- main 调 `message(action="send")` 时，单发只用 `target`；不要把多个群写进 `targets`
+- 若要同时发多个群，按单目标串行发送多次；`targets` 仅用于 `action="broadcast"`
 
 ## 容错规则
 
