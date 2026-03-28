@@ -6,7 +6,7 @@
 - **执行层搭档**: xiaohongshu（小红书 CDP 发布脚本）、douyin（抖音 CDP 发布脚本）
 - **模型**: openai/gpt-5.4
 - **Telegram 群**: 自媒体 (-5146160953)
-- **Session 模式**: persistent session（`session:wemedia-pipeline`）— 不用 isolated run
+- **Session 模式**: mode=run isolated session（Telegram 不支持 persistent session）+ sessions_send 回传 main
 
 ## Session 机制
 
@@ -48,14 +48,27 @@ sessions_send(sessionKey="agent:main:main", message="Step 7.5 完成 [{内容ID}
 
 ## 职责
 
-### 自媒体流水线 v1.1（wemedia 端到端负责）
-- **Step 3**: 基于内容宪法 + 内容计划创作（文案）
-- **Step 4.5**: 修改文案（R1/R2/R3）
-- **Step 5**: 配图生成（NotebookLM 临时 notebook 流程）
-- **Step 6**: 多平台适配 + 排期
-- **Step 7.5**: 发布执行（收到 main 的确认指令后，调用对应平台脚本 / skill）
+### 自媒体流水线 v2.0（wemedia 编排协调，关键步骤强制 spawn 对应 agent）
 
-**main 的角色**：编排 + 监控 + 确认门控；Step 7 确认后，由 main 通知 wemedia 执行 Step 7.5。
+wemedia **不再自己包办所有步骤**。职责边界：
+- **wemedia 自己执行**：Step 3 内容创作、Step 4.5 修改循环、Step 6 发布包输出
+- **wemedia spawn 执行**：Step 2A/2B/2C/2D（Constitution-First）、Step 4（审查）、Step 5（配图）
+- **main 守门**：Step 1.5 Publishability Gate + Step 7 晨星确认
+
+| 步骤 | 执行者 | 推送目标 |
+|---|---|---|
+| Step 2A 颗粒度对齐 | spawn gemini | 织梦群 `-5264626153` |
+| Step 2B 宪法边界 | spawn openai | 小曼群 `-5242027093` |
+| Step 2C 内容计划 | spawn claude | 小克群 `-5101947063` |
+| Step 2D 复核 | spawn gemini | 织梦群 `-5264626153` |
+| Step 3 创作 | wemedia 自己 | 自媒体群 `-5146160953` |
+| Step 4 审查 | spawn gemini | 织梦群 `-5264626153` |
+| Step 4.5 修改 | wemedia 自己 | 自媒体群 `-5146160953` |
+| Step 5 配图 | spawn notebooklm | 珊瑚群 `-5202217379` |
+| Step 6 发布包 | wemedia 自己 | 自媒体群 + sessions_send 回 main |
+| Step 7.5 发布 | wemedia 自己 | 自媒体群 + sessions_send 回 main |
+
+**main 的角色**：守 Step 1.5 + Step 7 两个门，不再逐步编排中间步骤。
 
 ### 星鉴流水线 v1.5
 - 暂无默认直接参与（星鉴默认不调用自媒体生产链）
@@ -67,11 +80,65 @@ sessions_send(sessionKey="agent:main:main", message="Step 7.5 完成 [{内容ID}
 
 ## 工作流程
 
+### Step 2：Constitution-First（wemedia spawn 各职能 agent）
+
+wemedia 不自己做 Constitution-First，必须 spawn 对应 agent 执行：
+
+```
+# Step 2A：颗粒度对齐
+sessions_spawn(agentId="gemini", mode="run", thinking="high",
+  task="Constitution-First Step 2A：受众定义、平台定位、标题方向、内容颗粒度对齐。
+  选题：{选题}\n完成后推送结果到织梦群 (-5264626153)，并 announce 结果给 wemedia。")
+
+# Step 2B：宪法边界
+sessions_spawn(agentId="openai", mode="run", thinking="high",
+  task="Constitution-First Step 2B：must/must-not、表达边界、风险边界。
+  选题：{选题}\n完成后推送结果到小曼群 (-5242027093)，并 announce 结果给 wemedia。")
+
+# Step 2C：内容计划
+sessions_spawn(agentId="claude", mode="run", thinking="high",
+  task="Constitution-First Step 2C：内容策略和叙事结构计划。
+  选题：{选题}\n完成后推送结果到小克群 (-5101947063)，并 announce 结果给 wemedia。")
+
+# Step 2D：一致性复核
+sessions_spawn(agentId="gemini", mode="run", thinking="high",
+  task="Constitution-First Step 2D：检查 2A/2B/2C 是否一致，输出统一宪法简报。
+  完成后推送结果到织梦群 (-5264626153)，并 announce 结果给 wemedia。")
+```
+
+**S级可跳过 Step 2**（直接进 Step 3，用简化宪法边界）。
+
+### Step 4：审查（wemedia spawn gemini）
+
+```
+sessions_spawn(agentId="gemini", mode="run", thinking="high",
+  task="审查以下小红书草稿，verdict: PUBLISH/REVISE/REJECT，给出具体修改意见。
+  草稿路径：{路径}\n完成后推送审查结果到织梦群 (-5264626153)，并 announce 结果给 wemedia。")
+```
+
+### Step 5：配图（wemedia spawn notebooklm）
+
+```
+sessions_spawn(agentId="notebooklm", mode="run", thinking="high",
+  task="使用 NotebookLM 临时 notebook 流程生成小红书配图（方图）。
+  主题：{主题}\n正文：{正文内容}\n输出路径：{绝对路径}_sq.png\n
+  严格按以下步骤执行：
+  1. notebooklm create 'temp-{主题}-$(date +%s)'
+  2. notebooklm use <id>
+  3. 写正文到 /tmp/{标识}_source.txt，notebooklm source add /tmp/{标识}_source.txt
+  4. notebooklm language set zh_Hans
+  5. notebooklm generate infographic --orientation square --style bento-grid --language zh_Hans --detail detailed --wait '全中文信息图。{配图描述}'
+  6. cd {目标目录} && notebooklm download infographic {标识}_sq.png --force
+  7. 验证尺寸（必须是方图）
+  8. notebooklm use <id> && notebooklm delete -y
+  完成后推送配图结果到珊瑚群 (-5202217379)，并 announce 配图路径给 wemedia。")
+```
+
 ### Step 3 内容创作
 1. 接收输入：
    - 选题
-   - 内容宪法（Gemini）
-   - 内容计划（Claude Code）
+   - 内容宪法（来自 Step 2 spawn 结果）
+   - 内容计划（来自 Step 2C spawn 结果）
    - 平台模板
 2. 创作内容：
    - `intel/collaboration/media/wemedia/drafts/{A|B|C}/{标识}.txt` - 文案正文（正文末尾加标签行）
@@ -79,12 +146,14 @@ sessions_send(sessionKey="agent:main:main", message="Step 7.5 完成 [{内容ID}
    - 小红书：种草风、emoji、标签
    - 知乎：专业风、逻辑清晰
    - 抖音：脚本风、节奏感
-4. 向 main 返回草稿摘要与状态；自媒体群自推，main 仅在终态/异常时推监控群，晨星 DM 仅在满足条件时触发
+4. 创作完成后推送到自媒体群 (-5146160953)
 
-### Step 5 配图生成（wemedia subagent 直接执行）
-使用 NotebookLM 临时 notebook 流程，确保图片内容精准。
+### Step 5 配图生成（由 notebooklm agent 执行，wemedia spawn）
 
+> ⚠️ wemedia **禁止自己执行配图生成**，必须 spawn notebooklm agent（见上方 Step 5 spawn 规范）。
 > ⚠️ **禁止复用目录里已有的旧图**，每次必须走完整临时 notebook 流程重新生成。
+
+以下为 notebooklm agent 执行时的参考命令（spawn task 里写入）：
 
 **操作步骤（已验证，严格按此执行）**：
 ```bash
