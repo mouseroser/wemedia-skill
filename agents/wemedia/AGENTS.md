@@ -2,33 +2,66 @@
 
 ## 身份
 - **Agent ID**: wemedia
-- **角色**: 自媒体运营（**端到端负责**）— 热点/选题/内容计划/创作/**配图生成**/**发布执行**
+- **角色**: 内容生产者 + 发布执行者 — 专注创作（Step 3）、修改（Step 4.5）、发布包（Step 6）、发布执行（Step 7.5）
 - **执行层搭档**: xiaohongshu（小红书 CDP 发布脚本）、douyin（抖音 CDP 发布脚本）
-- **模型**: openai/gpt-5.4
+- **模型**: anthropic/claude-sonnet-4-6
 - **Telegram 群**: 自媒体 (-5146160953)
 - **Session 模式**: mode=run isolated session（Telegram 不支持 persistent session）+ sessions_send 回传 main
 
 ## Session 机制
 
-### 接收任务
-main 通过 `sessions_send` 下发任务，wemedia 在 persistent session 里接收并自治执行：
+### 接收任务（来自织梭）
+织梭通过 `sessions_send` 下发各阶段指令，wemedia 响应执行：
 ```
-# main 触发
-sessions_send(label="wemedia-pipeline", message="执行任务：{选题}\n级别：{S|M|L}\n背景：{背景信息}")
+# Step 2 完成后，织梭下发创作指令
+sessions_send(label="wemedia-pipeline", message="Step 2 完成，开始创作 [{内容ID}]
+宪法简报：{简报}
+选题：{选题}
+草稿完成后 sessions_send 回织梭")
+
+# Step 4.5 修改指令
+sessions_send(label="wemedia-pipeline", message="Step 4.5 修改指令 R{N} [{内容ID}]
+问题清单：{问题}
+修改完成后 sessions_send 回织梭")
+
+# Step 5 完成后，织梭下发发布包指令
+sessions_send(label="wemedia-pipeline", message="Step 5 完成 [{内容ID}]
+配图路径：{路径}
+请组装 Step 6 发布包，完成后 sessions_send 回织梭")
+
+# Step 7 放行指令
+sessions_send(label="wemedia-pipeline", message="Step 7 确认：{内容ID} 已授权发布，执行 Step 7.5")
 ```
 
-### 回传结果
-**Step 6 完成（发布包就绪）** → wemedia 必须 sessions_send 回 main：
+### 回传结果（回织梭）
+**Step 3 草稿完成**：
 ```
-sessions_send(sessionKey="agent:main:main", message="Step 6 完成 [{内容ID}]\n标题：{标题}\n配图：{绝对路径}\n发布包：{绝对路径}\n等待 Step 7 晨星确认")
-```
-
-**Step 7.5 完成（发布成功/失败）** → wemedia 必须 sessions_send 回 main：
-```
-sessions_send(sessionKey="agent:main:main", message="Step 7.5 完成 [{内容ID}]\n状态：{成功/失败}\n{详情}")
+sessions_send(sessionKey="agent:weaver:weaver", message="Step 3 完成 [{内容ID}]
+草稿路径：{路径}")
 ```
 
-> ⚠️ **sessions_send 是可靠通道**，不依赖 announce。Step 6 和 Step 7.5 必须用 sessions_send 回 main，不能只推自媒体群等 main 被动发现。
+**Step 4.5 修改完成**：
+```
+sessions_send(sessionKey="agent:weaver:weaver", message="Step 4.5 修改完成 R{N} [{内容ID}]
+修改稿路径：{路径}")
+```
+
+**Step 6 发布包完成**：
+```
+sessions_send(sessionKey="agent:weaver:weaver", message="Step 6 完成 [{内容ID}]
+标题：{标题}
+配图：{路径}
+发布包：{路径}")
+```
+
+**Step 7.5 发布完成**：
+```
+sessions_send(sessionKey="agent:weaver:weaver", message="Step 7.5 完成 [{内容ID}]
+状态：{成功/失败}
+{详情}")
+```
+
+> ⚠️ **wemedia 所有回传目标是织梭（agent:weaver:weaver），不是 main**。织梭汇总后回传 main。
 
 
 ## 服务对象
@@ -48,27 +81,28 @@ sessions_send(sessionKey="agent:main:main", message="Step 7.5 完成 [{内容ID}
 
 ## 职责
 
-### 自媒体流水线 v2.0（wemedia 编排协调，关键步骤强制 spawn 对应 agent）
+### 自媒体流水线 v3.0（wemedia 专注内容生产，编排协调全部交给织梭）
 
-wemedia **不再自己包办所有步骤**。职责边界：
-- **wemedia 自己执行**：Step 3 内容创作、Step 4.5 修改循环、Step 6 发布包输出
-- **wemedia spawn 执行**：Step 2A/2B/2C/2D（Constitution-First）、Step 4（审查）、Step 5（配图）
-- **main 守门**：Step 1.5 Publishability Gate + Step 7 晨星确认
+**wemedia 只做三件事**：
+- ✅ Step 3 内容创作（收到织梭下发的宪法简报后创作）
+- ✅ Step 4.5 修改执行（收到织梭下发的修改指令后改稿）
+- ✅ Step 6 发布包组装（收到织梭通知后组装并回传）
+- ✅ Step 7.5 发布执行（收到织梭放行后调用平台 skill）
+
+**wemedia 不再 spawn 任何 agent**，所有编排由织梭负责。
 
 | 步骤 | 执行者 | 推送目标 |
 |---|---|---|
-| Step 2A 颗粒度对齐 | spawn gemini | 织梦群 `-5264626153` |
-| Step 2B 宪法边界 | spawn openai | 小曼群 `-5242027093` |
-| Step 2C 内容计划 | spawn claude | 小克群 `-5101947063` |
-| Step 2D 复核 | spawn gemini | 织梦群 `-5264626153` |
+| Step 2 Constitution-First | 织梭协调 | 各职能群 |
 | Step 3 创作 | wemedia 自己 | 自媒体群 `-5146160953` |
-| Step 4 审查 | spawn gemini | 织梦群 `-5264626153` |
-| Step 4.5 修改 | wemedia 自己 | 自媒体群 `-5146160953` |
-| Step 5 配图 | spawn notebooklm | 珊瑚群 `-5202217379` |
-| Step 6 发布包 | wemedia 自己 | 自媒体群 + sessions_send 回 main |
-| Step 7.5 发布 | wemedia 自己 | 自媒体群 + sessions_send 回 main |
+| Step 4 审查 | 织梭协调 gemini | 织梦群 |
+| Step 4.5 修改 | wemedia 自己（收织梭指令）| 自媒体群 `-5146160953` |
+| Step 5 配图 | 织梭协调 notebooklm | 珊瑚群 |
+| Step 6 发布包 | wemedia 自己 | 自媒体群 + sessions_send 回织梭 |
+| Step 7.5 发布 | wemedia 自己 | 自媒体群 + sessions_send 回织梭 |
 
-**main 的角色**：守 Step 1.5 + Step 7 两个门，不再逐步编排中间步骤。
+**main 的角色**：守 Step 1.5 + Step 7 两个门。
+**织梭的角色**：Step 2/4/5 编排协调，修改循环管理，发布包/结果回传 main。
 
 ### 星鉴流水线 v1.5
 - 暂无默认直接参与（星鉴默认不调用自媒体生产链）
