@@ -1,4 +1,290 @@
-# ERRORS.md - 错误日志
+# ERRORS.md
+
+## 2026-03-29 exec 内嵌 python3 -c 含特殊字符时 zsh 误解析
+- **现象**：python3 -c 字符串里含反引号、中文引号、箭头等特殊字符，zsh 会把它们当 shell 语法解析，报 `command not found` / `unknown file attribute`
+- **修复**：改用 `python3 << 'PYEOF' ... PYEOF` heredoc 形式，单引号 PYEOF 阻止 zsh 展开
+- **预防**：凡是 python3 -c 内容含特殊字符，一律改用 heredoc
+
+## 2026-03-29 edit 工具替换含特殊字符的文本失败
+- **现象**：edit oldText/newText 含中文引号、特殊字符时，报 `No changes made / identical content`，实际是字符编码不完全匹配
+- **修复**：改用 python3 heredoc 读文件 → str.replace → 写回，绕过 edit 工具的字符匹配限制
+- **预防**：文本含中文引号/特殊符号时，优先用 python3 heredoc 处理，不用 edit 工具
+
+## 2026-03-29 workspace git remote 未配置
+- **现象**：`git push` 报「没有配置推送目标」，commit 只落本地
+- **原因**：workspace repo 初始化时未绑定 remote
+- **修复**：`git remote add origin https://github.com/mouseroser/wemedia-skill.git && git push -u origin master`
+- **预防**：新建 repo 后立即 `git remote add origin <url>` + `git push -u origin master` - 错误日志
+
+## [ERR-20260327-003] Gemini subagent returns empty output because tool schema is rejected by provider
+
+**Logged**: 2026-03-27T10:02:00+08:00
+**Priority**: high
+**Status**: confirmed_root_cause
+**Area**: Gemini provider / subagent runtime
+
+### Summary
+Gemini subagent 的“空输出”不是模型没回答，而是请求在生成前被 provider 400 拒绝；subagent announce 没把错误显式冒泡，表现成 completed with no output。
+
+### Evidence
+会话文件：
+`/Users/lucifinil_chen/.openclaw/agents/gemini/sessions/fef9b862-8926-4f96-a2b1-58f28e02ac0b.jsonl`
+
+核心报错：
+```text
+400 ... tools[0].function_declarations[0].name: Invalid function name
+400 ... tools[0].function_declarations[1].name: Invalid function name
+...
+```
+
+### Root Cause
+Gemini provider 走的是 `openai-completions` 兼容层（`https://max.openai365.top/v1`），但 OpenClaw 发送的工具 schema 中有若干 function name 不符合 Gemini 那侧的 function_declarations 命名规则，导致整个请求在生成前被拒绝。由于 announce 层把这类失败折叠成“completed successfully + empty output”，主会话误以为 Gemini 在空输出。
+
+### Impact
+- Gemini 1.5A 空输出
+- Gemini 1.5E 空输出
+- Gemini Step 2 初稿 空输出
+- Claude / OpenAI 正常，说明不是任务 prompt 本身问题
+
+### Workaround
+1. 暂停把 Gemini 用于带工具的 subagent 写作/复核任务
+2. 改用 Claude / OpenAI 执行这些步骤
+3. 如必须用 Gemini，尝试为 gemini agent 配最小 tools allowlist 或 no-tools 专用 agent
+
+### Fix Direction
+- 在 Gemini 适配层规范化 tool function name（保证符合 Gemini function_declarations 规则）
+- 或让 Gemini 子 agent 默认不暴露整套工具，仅暴露白名单工具
+- 或在 announce 层正确上报 provider error，不要伪装成 completed/no output
+
+---
+
+## [ERR-20260327-001] nlm-gateway artifact generate fails: notebooklm -n flag not supported
+
+**Logged**: 2026-03-27T09:53:00+08:00
+**Priority**: medium
+**Status**: known_bug
+**Area**: notebooklm skill / nlm-gateway
+
+### Summary
+`nlm-gateway.sh artifact generate` 失败，因为底层调用 `notebooklm generate -n "$nb_id"` 时，`notebooklm generate` 命令不接受 `-n` 参数（NotebookLM CLI 的 `generate` 子命令不需要 notebook ID 指定）。
+
+### Error
+```
+Error: No such option: -n
+artifact generate failed
+```
+
+### Root Cause
+gateway 脚本里 `cmd_artifact()` 对 `generate` 操作使用 `notebooklm generate -n "$nb_id"`，但 `notebooklm generate` 命令没有 `-n` 选项（需要先用 `notebooklm use <nb_id>` 切换 notebook）。`-n` 是 `notebooklm` 全局选项，不是 `generate` 子命令的选项。
+
+### Workaround
+直接用 CLI 绕过 gateway：
+```bash
+notebooklm use "$nb_id"
+notebooklm generate infographic "..." --orientation square --style bento-grid --language zh_Hans
+```
+
+### Fix
+修改 `nlm-gateway.sh` 的 `cmd_artifact()` 函数，对 `generate` 操作不使用 `-n "$nb_id"`，改用先 `notebooklm use "$nb_id"` 再 `generate` 的方式；或者 NotebookLM CLI 新版本已支持 `notebooklm generate -n <id>` 直接指定。
+
+---
+
+## [ERR-20260327-002] notebooklm generate RPC null result
+
+**Logged**: 2026-03-27T09:54:00+08:00
+**Priority**: medium
+**Status**: intermittent
+**Area**: notebooklm CLI
+
+### Summary
+在已有内容的 notebook 上调用 `notebooklm generate infographic` 返回 RPC null result，可能是 source太少（notebook几乎是空的）或 query 参数格式不兼容。
+
+### Error
+```
+Error: RPC rLM1Ne returned null result data (possible server error or parameter mismatch)
+```
+
+### Workaround
+1. 先往 notebook 添加一个有实质内容的 source（不是 /dev/null 或空文件）
+2. 使用更简单的 query 字符串
+3. 用临时干净 notebook 生成（`notebooklm create` 后直接生成，不先添加 source）
+
+### Investigate
+在 `agent-kernel-cover` notebook（已有 1 个 source）上复现，在新建的 `DeerFlow-OpenClaw-Cover-Temp`（0 source）上也复现。可能是 infographic 子命令本身在当前 NotebookLM 版本中的行为有变化。
+
+---
+
+## [ERR-20260326-001] read-path-tilde-enoent
+
+**Logged**: 2026-03-26T07:35:00+08:00
+**Priority**: medium
+**Status**: resolved
+**Area**: config
+
+### Summary
+`read` 工具对 `~` 路径不保证做 shell 式展开，直接传 `~/.openclaw/...` 可能触发 `ENOENT`。
+
+### Error
+```
+[read] ENOENT: no such file or directory, access '[REDACTED]'
+```
+
+### Context
+- 触发操作：读取 skill 文件时传入 `~/.openclaw/skills/.../SKILL.md`
+- 现象：工具报 `ENOENT`
+- 实际根因：OpenClaw `read` 工具参数不是 shell，`~` 不一定自动展开
+
+### Suggested Fix
+统一对 `read` / `write` / `edit` 使用绝对路径，不依赖 `~` 展开。
+
+### Metadata
+- Reproducible: yes
+- Related Files: TOOLS.md
+
+### Resolution
+- **Resolved**: 2026-03-26T07:35:00+08:00
+- **Notes**: 已在 `TOOLS.md` 增加规则：文件工具优先使用绝对路径，避免 `~` 导致 ENOENT。
+
+---
+
+## [ERR-20260326-002] pyarrow-table-to-list-attributeerror
+
+**Logged**: 2026-03-26T07:38:00+08:00
+**Priority**: low
+**Status**: resolved
+**Area**: config
+
+### Summary
+在用 Python 直接读取 LanceDB 底表时，把 `pyarrow.Table` 当成有 `to_list()` 方法，实际应使用 `to_pylist()`。
+
+### Error
+```
+Traceback (most recent call last):
+  File "<stdin>", line 5, in <module>
+AttributeError: 'pyarrow.lib.Table' object has no attribute 'to_list'. Did you mean: 'to_pylist'?
+```
+
+### Context
+- 触发操作：通过 LanceDB / PyArrow 直接检查 Layer 2 底表
+- 现象：调用 `pyarrow.Table.to_list()` 报 AttributeError
+- 根因：`to_list()` 不是 `pyarrow.Table` 的方法；正确方法是 `to_pylist()`
+
+### Suggested Fix
+读取 Arrow 表时统一使用 `table.to_pylist()`，不要误用 `to_list()`。
+
+### Metadata
+- Reproducible: yes
+- Related Files: /Users/lucifinil_chen/.openclaw/memory/lancedb-pro
+
+### Resolution
+- **Resolved**: 2026-03-26T07:38:00+08:00
+- **Notes**: 已改用 `to_pylist()` 完成底表扫描与噪音复查。
+
+---
+
+## [ERR-20260326-003] openclaw-cron-subcommand-mismatch
+
+**Logged**: 2026-03-26T07:40:00+08:00
+**Priority**: medium
+**Status**: resolved
+**Area**: config
+
+### Summary
+误把 cron 即时执行命令写成 `openclaw cron trigger`，但当前 CLI 正确子命令是 `openclaw cron run`。
+
+### Error
+```
+error: unknown command 'trigger'
+```
+
+### Context
+- 触发操作：按 HEARTBEAT.md 想手动触发异常 cron
+- 现象：CLI 返回 unknown command `trigger`
+- 实际根因：HEARTBEAT.md 中命令写的是旧口径；当前 `openclaw cron --help` 显示正确命令为 `run`
+
+### Suggested Fix
+更新心跳与运维文档：手动触发 cron 一律使用 `openclaw cron run --id <job-id>`。
+
+### Metadata
+- Reproducible: yes
+- Related Files: /Users/lucifinil_chen/.openclaw/workspace/HEARTBEAT.md
+
+### Resolution
+- **Resolved**: 2026-03-26T07:40:00+08:00
+- **Notes**: 已改用 `openclaw cron run 95a2ac7d-b275-44ca-9049-a26ac19dd52d` 成功补跑 `media-signal-morning`。
+
+---
+
+## [ERR-20260326-004] edit-exact-match-fragile
+
+**Logged**: 2026-03-26T07:41:00+08:00
+**Priority**: low
+**Status**: resolved
+**Area**: docs
+
+### Summary
+`edit` 工具要求 oldText 完全精确匹配；当目标文本上下文或空白略有变化时，替换会失败。
+
+### Error
+```
+Could not find the exact text in [REDACTED]
+The old text must match exactly including all whitespace and newlines.
+```
+
+### Context
+- 触发操作：向 `.learnings/ERRORS.md` 插入新错误条目
+- 现象：`edit` 因 oldText 未精确命中而失败
+- 根因：`edit` 是精确替换，不适合在长文件中做脆弱锚点插入
+
+### Suggested Fix
+对长日志文件追加/重写时，优先先 `read` 精确定位；若锚点不稳，直接用 `write` 全量重写，避免反复失败。
+
+### Metadata
+- Reproducible: yes
+- Related Files: /Users/lucifinil_chen/.openclaw/workspace/.learnings/ERRORS.md
+
+### Resolution
+- **Resolved**: 2026-03-26T07:41:00+08:00
+- **Notes**: 本次改为 `write` 全量重写 ERRORS.md，已成功保留旧内容并追加新条目。
+
+---
+
+## [ERR-20260326-005] xhs-tags-became-body-text
+
+**Logged**: 2026-03-26T11:12:00+08:00
+**Priority**: high
+**Status**: resolved
+**Area**: xiaohongshu
+
+### Summary
+小红书发布时，pack 里的标签行被当作正文末尾一起发布，没有进入话题选择器，导致后台看到“所有标签都变成正文”。
+
+### Error
+```
+发布后发现 pack 里的 #标签 行出现在正文中，未正确作为话题标签选入。
+```
+
+### Context
+- 触发操作：使用 `publish_with_guard.py --pack ... --step full` 发布两条小红书内容
+- 现象：pack 的正文末尾标签行（如 `#AI安全 #LiteLLM ...`）被直接灌入编辑器，变成正文文本
+- 根因：`publish_with_guard.py` 之前直接调用 `cdp_publish.py publish`，绕过了 `publish_pipeline.py` 中的 `_extract_topic_tags_from_last_line()` + `_select_topics()` 逻辑；因此标签没有被识别并注入话题选择器，只作为普通正文保留
+
+### Suggested Fix
+1. `publish_with_guard.py` 不再直调 `cdp_publish.py publish`，统一改走 `publish_pipeline.py`
+2. 包装器在发布前从 `标签：` 字段重建最终标签行，并自动剥离正文末尾已有的 `#标签` 行，避免重复
+3. 以后不要直接把带标签的正文传给 `cdp_publish.py publish`；有标签的发布统一走 `publish_with_guard.py` / `publish_pipeline.py`
+
+### Metadata
+- Reproducible: yes
+- Related Files:
+  - /Users/lucifinil_chen/.openclaw/skills/xiaohongshu/scripts/publish_with_guard.py
+  - /Users/lucifinil_chen/.openclaw/skills/xiaohongshu/scripts/publish_pipeline.py
+
+### Resolution
+- **Resolved**: 2026-03-26T11:12:00+08:00
+- **Notes**: 已热修 `publish_with_guard.py`：改为调用 `publish_pipeline.py`，并在包装器内重建 tags last line + 去重剥离旧标签行。未来 pack 中的 `标签：` 会进入话题选择器，而不是落成正文文本。
+
+---
 
 ## 2026-03-11 00:00 - 流水线 announce 不可靠
 
@@ -118,1107 +404,327 @@ spawned_tasks = {
 while True:
     for session_key, task in spawned_tasks.items():
         if session_key in completed_sessions:
-            continue  # 已完成，跳过
+            continue
         
-        # 检查文件
-        if file_exists(task["output_path"]):
-            file_age = now() - file_mtime(task["output_path"])
-            if file_age < 120:  # < 2 分钟
-                # 文件新鲜，立即处理
-                process_output(task["output_path"])
+        if os.path.exists(task["output_path"]):
+            mtime = os.path.getmtime(task["output_path"])
+            if time.time() - mtime < 120:  # 2 分钟内更新
+                result = read_file(task["output_path"])
+                process_result(result)
                 completed_sessions.add(session_key)
-                continue
-        
-        # 检查超时
-        if now() > task["expected_completion"]:
-            alert("Task timeout", session_key)
-    
-    sleep(30)
 ```
 
-**预防措施**:
-- 在 AGENTS.md 中添加"主动轮询检查"的强制规则
-- 在流水线 SKILL.md 中实现轮询逻辑
-- 完全放弃依赖 announce
-- Announce 只作为"加速通知"，不作为"唯一信号"
-
-**优先级**: P0 - 必须立即修复，这是流水线可靠性的根本
-
-**教训**:
-- 不要相信 announce 会到达
-- 不要被动等待
-- 主动检查是唯一可靠的方案
+**优先级**: P0 - 架构级修复
 
 ---
 
+## [ERR-20260326-006] rerank-sidecar-broken-venv-libpython
 
-## [ERR-20260311-001]
-
-**Logged**: 2026-03-11T06:36:57.249Z
-**Priority**: medium
-**Status**: pending
-**Area**: backend
-
-### Summary
-Misused read/write tools during Step 3 report generation by reading a directory path and repeatedly calling write without required content
-
-### Details
-Encountered read EISDIR when attempting to read manuscript directory directly instead of enumerating files first. Then repeatedly triggered write validation errors by omitting the required content field while creating the report file.
-
-### Suggested Action
-When target path may be a directory, list files first via exec/find and read specific files. Before any write call, verify required schema fields are present, especially content. After first validation failure, stop retrying identical invalid calls and correct arguments immediately.
-
-### Metadata
-- Source: memory-lancedb-pro/self_improvement_log
----
-
-
-## [ERR-20260313-001]
-
-**Logged**: 2026-03-13T06:39:12.747Z
+**Logged**: 2026-03-26T20:29:00+08:00
 **Priority**: high
-**Status**: pending
-**Area**: backend
-
-### Summary
-陷入 write 工具调用循环 - 连续忘记提供 content 参数
-
-### Details
-在执行星鉴流水线 Step 2B 时，连续多次调用 write 工具但始终忘记提供必需的 content 参数。这是一个严重的执行模式问题，违反了"方向切换规则"。
-
-### Suggested Action
-在调用 write 工具前，必须先准备好完整的 content 内容。如果内容很长，应该先在内存中构建，然后一次性写入。
-
-### Metadata
-- Source: memory-lancedb-pro/self_improvement_log
----
-
-
-## [ERR-20260313-002]
-
-**Logged**: 2026-03-13T20:17:47.255Z
-**Priority**: high
-**Status**: pending
-**Area**: config
-
-### Summary
-sync-high-priority-memories cron script fails because it depends on a missing pre-generated JSON file and manual Telegram intervention
-
-### Details
-Ran `bash ~/.openclaw/workspace/scripts/sync-high-priority-memories.sh` at 2026-03-14 04:17 Asia/Shanghai. Script logs that it cannot actually query memory data itself, asks for manual Telegram triggering, then exits with code 1 because `~/.openclaw/workspace/.tmp/high-priority-memories.json` does not exist. Root issue: the automation script is not end-to-end; it does not invoke memory tools directly and therefore cannot fulfill the cron task autonomously.
-
-### Suggested Action
-Replace the script/cron flow with a real isolated agentTurn that calls memory tools directly, or rewrite the script to use a supported non-interactive interface for exporting importance >= 0.9 memories before attempting NotebookLM sync.
-
-### Metadata
-- Source: memory-lancedb-pro/self_improvement_log
----
-
-
-## [ERR-20260313-003]
-
-**Logged**: 2026-03-13T22:54:41.242Z
-**Priority**: medium
-**Status**: pending
+**Status**: resolved
 **Area**: infra
 
 ### Summary
-NotebookLM daily query cron was interrupted by SIGTERM during execution
-
-### Details
-Cron task notebooklm-daily-query (dd9cb82e-d4b3-4ffa-b8c7-f122ddd23ddf) started and reached Step 2, then exec session gentle-haven was terminated with signal SIGTERM at 2026-03-14 06:52 Asia/Shanghai. This prevented report generation in the main session.
-
-### Suggested Action
-Check cron/task timeout or parent session interruption behavior for long-running NotebookLM queries; consider longer timeout or splitting the script into resumable steps.
-
-### Metadata
-- Source: memory-lancedb-pro/self_improvement_log
----
-
-
-## [ERR-20260314-001]
-
-**Logged**: 2026-03-14T00:47:27.766Z
-**Priority**: medium
-**Status**: pending
-**Area**: config
-
-### Summary
-Forced cron rerun of NotebookLM memory sync completed the script successfully but final run status stayed error because a post-run exact edit to memory/2026-03-14.md failed.
-
-### Details
-During forced rerun of cron job `NotebookLM 记忆同步` (jobId 39618059-570d-402e-86f8-752891e8e480), the summary showed script success: 77 files synced and latest memory files updated. However run history recorded status=error with `⚠️ 📝 Edit: in ~/.openclaw/workspace/memory/2026-03-14.md (31 chars) failed`. Root pattern: the isolated agent likely tried an exact-text edit against a changing daily memory file after successful core work, causing overall cron status to be marked as error even though the data sync itself succeeded.
-
-### Suggested Action
-For cron agents that log results into daily memory files, prefer append/write-safe logging instead of exact-text edit against volatile files. Separate core task success from optional logging so post-run log-write failures do not poison overall cron status.
-
-### Metadata
-- Source: memory-lancedb-pro/self_improvement_log
----
-
-
----
-
-## 2026-03-14 16:18 - builtin memorySearch 被 memory/archive 超长文件拖垮
-
-**问题**: 使用 `openclaw memory search` 测 builtin memorySearch 时，搜索反复出现 rate limit 重试，随后报错：
-- `Ollama embeddings HTTP 500: {"error":"the input length exceeds the context length"}`
-- `sync failed (session-start)`
-- `sync failed (search)`
-
-部分长命令因此长时间无有效输出，最终只能手动终止进程（SIGTERM）。
-
-**根因**:
-1. builtin memorySearch 默认索引 `MEMORY.md` + `memory/**/*.md`
-2. 当前 `memory/archive/` 目录仍位于默认索引范围内
-3. 归档目录中存在超大 markdown 文件（如 notebooklm-daily 395KB / 256KB）
-4. 这些超长文件在 builtin sync / embedding 阶段触发 Ollama context length 错误
-
-**影响**:
-- builtin memorySearch 当前不适合公平 benchmark
-- `openclaw memory search` 结果会失真（No matches / sync failed / 卡住）
-- 误导人以为是排序质量问题，实际上先是索引范围冲突问题
-
-**解决方案**:
-1. 先把 builtin memorySearch 视为影子线，不作为正式主检索评估对象
-2. 在 archive 冲突未解决前，不应用 builtin 的 hybrid / MMR / temporalDecay / sessionMemory 增强配置
-3. 如果后续要认真评估 builtin：
-   - 先决定是否执行 archive 架构迁移
-   - 再做 reindex / warm-up / benchmark
-
-**预防措施**:
-- 大型归档文件不要默认留在 builtin memorySearch 的索引范围内
-- 评估 builtin 前先检查 `openclaw memory status --deep` + 实测 search 是否稳定
-- 先排“索引范围冲突”，再谈“排序策略优化”
-
-**优先级**: P1 - 重要，但当前不应直接修成架构迁移
-
-## 2026-03-14: Ollama batch embedding 热修复
-
-**问题**: OpenClaw 的 Ollama embedding provider 使用旧 `/api/embeddings` 端点（单条），`embedBatch` 实现为 `Promise.all(texts.map(embedOne))`，N 条 = N 次 HTTP 请求。
-
-**根因**: Ollama 2024 年就支持了 `/api/embed` batch 端点，但 OpenClaw 的 `embeddings-ollama.ts` 没有更新。
-
-**修复**: 热修复 `dist/reply-BEN3KNDZ.js`，新增 `embedBatchNative` 函数使用 `/api/embed`，带 graceful fallback。
-
-**文件**: `~/.openclaw/runtime-overrides/ollama-batch-embed-hotfix/`
-- `hotfix-patch.py` — 检测 / 应用 / 回滚（三模式）
-- `check-hotfix.sh` — cron 调用，自动检测 + 重新应用 + 重启
-- `apply-hotfix.sh` — 手动应用
-
-**Issue**: https://github.com/openclaw/openclaw/issues/45944
-**Cron**: `hotfix-check-after-update` (9ec9bae9)，每 6 小时检查一次
-**性能**: 2.4x 加速（10 条文本 227ms → 95ms）
-
-**教训**: `set -e` + 非零退出码 = 脚本提前终止。对于"检测到需要修复"这种正常的非零退出，不能用 `set -e`。
-
-## 2026-03-15: layer2-health-check.sh 使用不存在的 CLI 命令 `openclaw memory-pro`
-
-**问题**: Layer 2 健康检查脚本持续报 "缺少 openai 模块" + "unknown command 'memory-pro'"，连续 4 天（3/12~3/15）召回测试要么跳过要么失败。
-
-**根因链（为什么总是用错误的 CLI）**:
-1. **脚本是 AI agent（cron isolated session）自动生成的**，不是人写的
-2. 生成时 agent 把 memory-lancedb-pro 的**插件名**当成了 **CLI 子命令名**，臆造了 `openclaw memory-pro search --scope agent:main --limit 3` 这个完全不存在的命令
-3. OpenClaw 正确的 CLI 是 `openclaw memory search`（builtin memory search），不是 `openclaw memory-pro`
-4. **脚本生成后没有做过验证测试**——第一次跑就报错（3/12），但因为 `|| true` 吞掉了退出码，只是在报告里写了 "⚠️ memory-pro CLI 不可用，跳过召回测试"
-5. 3/13 和 3/14 恰好不知道怎么通过了（可能 agent 在 session 内做了不同的事），但 3/15 再次爆出 `Cannot find module 'openai'` + `error: unknown command 'memory-pro'`
-6. 报错信息 "缺少 openai 模块" 具有误导性——实际上 openai npm 包已装好且 Gateway 内插件完全正常；是**错误的 CLI 命令触发了插件在错误上下文重新加载**才找不到模块
-
-**根本教训**:
-- **AI agent 自动生成的脚本必须立即验证**：生成后至少跑一次 dry-run
-- **不要把插件名当 CLI 子命令臆造**：先 `openclaw help` 确认可用子命令
-- **`|| true` 吞错误 + 报告里只写 warning = 问题被静默化**：重要错误应该有显式告警机制
-- **cron 的 agentTurn 每次是全新 session**：agent 没有上次跑的记忆，每次都可能犯同样的错误——所以**依赖的脚本必须是确定性的、经过验证的**
-
-**修复**: 将 `openclaw memory-pro search --scope agent:main "晨星" --limit 3` 改为 `openclaw memory search "晨星"`，并适配输出格式解析（分数行 `0.621 memory/file.md:1-33`）。修复后立即测试通过，召回 8 条结果，健康评分恢复到 75/100。
-
-**预防措施**:
-- 新建/修改 cron 依赖脚本后，必须在当前 session 内立即执行一次验证
-- 对于 CLI 命令，先 `openclaw <cmd> --help` 确认存在再写入脚本
-- 考虑在脚本开头加 `openclaw memory search --help >/dev/null 2>&1 || { echo "FATAL: CLI not available"; exit 1; }` 的前置检查
-
-**优先级**: P1 - 已修复
-
-## 2026-03-15 凌晨: OpenClaw 升级 + PR 分支切换导致 Layer 3 完全失效
-
-**问题**: Layer 3 (NotebookLM fallback) 完全不工作，既没有配置也没有代码。
-
-**根因（双重叠加）**:
-1. **升级裁掉配置**：OpenClaw 升级到 v2026.3.13 后，`openclaw.json` 中 `plugins.entries["memory-lancedb-pro"].config.layer3Fallback` 配置块被自动清掉
-2. **分支切换影响 runtime**：workspace 插件工作树（也是 live runtime 加载路径）停留在 `fix/skip-claude-review-on-fork-prs` 分支，该分支不含 layer3Fallback 代码
-3. 两个问题各自就能导致 Layer 3 失效，叠加后更难排查
-
-**影响**: 严重 — Layer 3 深度记忆检索完全不可用
-
-**解决方案**:
-1. 切回正确分支 `feat/layer3-notebooklm-fallback`
-2. 通过 `gateway config.patch` 恢复 layer3Fallback 配置
-3. **建立防护机制**：
-   - 专用 runtime worktree `~/.openclaw/runtime-plugins/memory-lancedb-pro`（分支 `runtime/layer3-fallback-active`），与 PR 工作树完全分离
-   - PR 开发用独立 worktree `~/.openclaw/worktrees/memory-lancedb-pro/pr-xxx`
-   - HEARTBEAT.md 增加守护规则
-   - 状态文件 `~/.openclaw/state/layer3-fallback-guard.json`
-
-**教训**:
-- **不要用同一个 worktree 既跑 runtime 又做 PR 开发** — 切分支会直接影响生产
-- **OpenClaw 升级可能裁掉自定义插件配置** — 升级后必须检查 layer3Fallback 配置是否还在
-- 心跳检查应该同时验证：版本号、runtime load path、layer3Fallback 配置存在性
-
-**优先级**: P0 - 已修复并建立防护
-
----
-
-## 2026-03-15 10:30 - Cron delivery 缺少 target 导致假 error
-
-**问题**: `记忆压缩检查` 和 `layer3-deep-insights` 两个 cron 任务实际执行成功，但状态显示 `error`
-
-**根因**: delivery 配置里有 `mode: announce` 但没有 `to` 字段，Telegram 投递时报 "Delivering to Telegram requires target \<chatId\>"
-
-**影响**: 低 — 任务本身完成了，只是通知没发出去 + 状态显示 error
-
-**解决**: 补上 `delivery.to: "1099011886"`
-
-**教训**: 
-- 新建 cron 任务时，如果设了 `delivery.mode: announce`，必须同时设 `to` 和 `channel`
-- 心跳检查应把 "delivery error" 和 "task error" 区分开
-- 这类 delivery error 会导致 `consecutiveErrors` 计数增长，掩盖真正的任务错误
-
-**优先级**: P2 - 已修复
-
----
-
-## 2026-03-15 23:50 - LanceDB API / 手工导入记忆的两个坑
-
-**问题 1**: 排障时把 Python LanceDB API 当成 JS API 使用，调用了不存在的 `table.query()`。
-
-**根因**:
-1. 直接类比插件源码（JS/TS）里的 `table.query()`
-2. 没先在 Python 环境里确认实际 API
-3. 结果报错：`AttributeError: 'LanceTable' object has no attribute 'query'`
-
-**正确做法**:
-- Python 版先用 `table.search().where(...).select(...).to_list()`
-- 跨语言排障时，不要假设同名库 API 完全一致
-
-**问题 2**: 通过底层 LanceDB 手工导入后，部分旧 memory 记录虽然可检索，但 `memory_update` / `memory_forget` 可能提示 `outside accessible scopes`。
-
-**根因**:
-1. 绕过了插件正常写入链路，直接操作底层表
-2. 工具层的可访问性 / 作用域校验与手工导入记录之间存在不一致
-
-**正确做法**:
-- 优先通过 `memory_store` / `memory_update` / `memory_forget` 维护记忆
-- 只有在数据恢复场景才直接操作 LanceDB
-- 恢复后要额外验证：检索、stats、update、forget 四条链路都正常
-
-**影响**: 中等 - 容易在恢复后留下“能搜到但改不掉/删不掉”的脏数据
-
-**预防措施**:
-1. 先确认库的真实 API，再写迁移/恢复脚本
-2. 底层恢复完成后，必须补做工具层 CRUD 验证
-3. 如需批量迁移，优先找插件官方 import/upgrade 路径，而不是直接写表
-
-**优先级**: P1 - 重要，后续恢复/迁移场景高概率复现
-
-## [ERR-20260317-001] layer3-fallback-notebooklm-session-lock
-
-**Logged**: 2026-03-17T00:00:00Z
-**Priority**: high
-**Status**: fixed
-**Area**: memory
-
-### Summary
-`memory_recall` 的 Layer 3 fallback 在 2026-03-17 的 Day 3 benchmark 中连续 3 次出现 `notebooklm session file locked + gateway timeout`，导致本应作为补充的 NotebookLM 深查链路失效。
+本地 rerank sidecar 健康检查失败，根因不是端口或 launchctl，而是 sidecar `.venv/bin/python3` 绑定的 Python 运行时损坏，缺失 `libpython3.12.dylib`，导致 launchd 反复拉起失败。
 
 ### Error
-```text
-Layer 3 fallback failed 3 times with notebooklm session file locked + gateway timeout
-lock path: ~/.openclaw/agents/notebooklm/sessions/...jsonl.lock
+```
+dyld: Library not loaded: @executable_path/../lib/libpython3.12.dylib
+Referenced from: .../.venv/bin/python3
+Reason: tried: .../.venv/lib/libpython3.12.dylib (no such file)
 ```
 
 ### Context
-- Command/operation attempted: `memory_recall` 自动触发 Layer 3 fallback
-- Environment: OpenClaw runtime plugin `memory-lancedb-pro`
-- Observed behavior:
-  - Layer 2 正常返回
-  - Layer 3 在 5/15 次 benchmark 查询中被动触发
-  - 其中 3 次显式失败，错误集中在 NotebookLM agent session lock + timeout
+- 触发操作：heartbeat 检查 `http://127.0.0.1:8765/health`
+- 现象：health 无响应，launchctl 任务存在但没有监听端口
+- 根因：launchd log 显示 `.venv/bin/python3` 启动即 SIGABRT，缺少 `libpython3.12.dylib`
+
+### Suggested Fix
+1. 删除损坏的 `.venv`
+2. 在 `services/local-rerank-sidecar/` 下重新 `uv sync`
+3. 重启 `com.openclaw.local-rerank-sidecar`
+4. 重新验证 `8765/health`
+
+### Metadata
+- Reproducible: yes
 - Related Files:
-  - `~/.openclaw/runtime-plugins/memory-lancedb-pro/src/tools.ts`
-  - `~/.openclaw/runtime-plugins/memory-lancedb-pro/test/layer3-fallback.test.mjs`
+  - /Users/lucifinil_chen/.openclaw/workspace/services/local-rerank-sidecar
+  - /Users/lucifinil_chen/Library/LaunchAgents/com.openclaw.local-rerank-sidecar.plist
+
+### Resolution
+- **Resolved**: 2026-03-26T20:30:45+08:00
+- **Notes**: 已删除损坏 `.venv`，在 `services/local-rerank-sidecar/` 下重新执行 `uv sync`，随后重启 `com.openclaw.local-rerank-sidecar`。日志显示模型加载完成，`GET /health` 已连续返回 `200`。
+
+---
+
+---
+
+## [ERR-20260326-007] message-send-schema-buttons-required-workaround
+
+**Logged**: 2026-03-26T22:32:00+08:00
+**Priority**: medium
+**Status**: resolved
+**Area**: infra
+
+### Summary
+`message(action=send)` 在部分调用路径下会被 schema 校验误要求提供 `buttons` 字段；即使只是普通文本发送，也可能因缺少 `buttons` 被拦下。
+
+### Error
+```
+message(action=send) schema validation unexpectedly required `buttons`
+```
+
+### Context
+- 触发操作：cron / agent 在 Telegram 渠道发送普通文本通知
+- 现象：发送纯文本时仍被校验层要求传 `buttons`
+- 根因：工具 schema / 调用适配层对 `buttons` 的必填判断过严，和“纯文本发送无需按钮”的预期不一致
+
+### Suggested Fix
+普通文本发送若遇到该校验，显式传空数组 `buttons=[]` 作为兼容绕过；后续再修 schema 本身。
+
+### Metadata
+- Reproducible: yes
+- Related Files:
+  - message tool send path
+  - cron delivery / agent message send flows
+
+### Resolution
+- **Resolved**: 2026-03-26T22:32:00+08:00
+- **Notes**: 今晚已通过传 `buttons=[]` 成功绕过，后续遇到同类报错优先采用该兼容写法。
+
+---
+
+### Error: `openclaw cron run --id` 使用了错误的 flag
+```
+unknown option '--id'
+```
+
+### Context
+- 触发操作：HEARTBEAT.md 中引用 `openclaw cron run --id <job-id>`
+- 现象：`--id` 不是有效选项
+- 根因：OpenClaw CLI 的 cron run 子命令使用 positional argument `<id>`，不是 `--id` flag
+
+### Suggested Fix
+HEARTBEAT.md 中已修正为 `openclaw cron run <job-id>`（positional）。
+
+### Metadata
+- **Reproducible**: yes
+- **Related Files**: HEARTBEAT.md
+
+### Resolution
+- **Resolved**: 2026-03-27T05:22:00+08:00
+- **Notes**: HEARTBEAT.md 已修正。CLI 正确用法是 `openclaw cron run <id>`（positional），不是 `--id <job-id>`。
+
+## [ERR-20260327-004] xiaohongshu-publish-manual-browser-fallback-corrupts-final-content
+
+**Logged**: 2026-03-27T20:08:00+08:00
+**Priority**: critical
+**Status**: promoted
+**Area**: docs
+
+### Summary
+小红书正式发布中，`publish_pipeline.py` 因页面结构变化失效后，main 改走 browser 手工补发，导致正文被覆盖、标签漂移、实际上传配图与发布包不一致。
+
+### Error
+```text
+1. publish_pipeline.py 无法找到“上传图文”tab
+2. browser tool 出现 element not found / locator.fill timeout / fields are required
+3. browser 富文本框手工补标签后，正文被替换成仅剩 hashtags
+4. 最终提交时未做标题/正文/标签/素材路径四项一致性强校验
+```
+
+### Context
+- 目标平台：小红书
+- 正确 owner：Step 7.5 应由 wemedia 执行，不应由 main 直接手工发布
+- 发布包声明封面：`2026-03-27-deerflow-vs-openclaw_sq_v3.jpg`
+- 实际上传素材：`2026-03-27-deerflow-vs-openclaw_sq.jpg`
+- 正文一度出现 `1267/1000` 超限，说明 Step 6 平台适配并未完全收口
+
+### Suggested Fix
+1. 平台脚本/CDP/页面结构异常时，正式发布必须直接 `BLOCKED`
+2. 禁止 main 用 browser 富文本表单临场补救正式发布
+3. Step 7.5 只允许 wemedia 按最终发布包调用平台 skill
+4. 提交前强校验：标题/正文/标签/素材路径与发布包一致；小红书额外校验标题≤20、正文≤1000、标签≤10
+5. “发布成功”页面不能代替内容正确性验收
+
+### Metadata
+- Reproducible: yes
+- Related Files: /Users/lucifinil_chen/.openclaw/workspace/AGENTS.md, /Users/lucifinil_chen/.openclaw/workspace/agents/wemedia/AGENTS.md, /Users/lucifinil_chen/.openclaw/workspace/TOOLS.md, /Users/lucifinil_chen/.openclaw/workspace/MEMORY.md
+- See Also: ERR-20260327-003
+
+### Resolution
+- **Resolved**: 2026-03-27T20:08:00+08:00
+- **Notes**: 已将该事故规则提升到主 AGENTS、wemedia AGENTS、TOOLS、MEMORY；后续正式发布禁止 main/browser 手工补发。
+
+---
+
+## 2026-03-27 — 版本化 skill 文档未以上一正式版为底稿，导致结构漂移
+
+- 症状：`starchain` v2.9 contract / flowchart 与 v2.8 不共享同一章节骨架；exact-text edit 多次失败；通知规则与旧 reference 容易漂移。
+- 根因：v2.9 采用了重新撰写/抽象重构，而不是从 v2.8 正式版复制后做 delta 修改。
+- 证据：`pipeline-v2-8-contract.md` 552 行 → `pipeline-v2-9-contract.md` 197 行；`PIPELINE_FLOWCHART_V2_8_EMOJI.md` 324 行 → `V2_9` 122 行；语言、结构、抽象层级整体重写。
+- 教训：新版本 contract / flowchart 必须以上一正式版为底稿复制演进，保留稳定锚点（通知、重试、路径、回滚、Step 定义），再做差量修改。
+- 修复：已将该规则写入 `skills/starchain/SKILL.md` 与 `skills/stareval/SKILL.md` 的 Version Policy。
+
+
+## 2026-03-27 — NotebookLM 配图流程违规 + gateway artifact 参数兼容问题
+
+### 现象
+- DeerFlow × OpenClaw 这条内容的配图没有按 Step 5 硬规则使用 NotebookLM 生成。
+- 没有执行“临时 notebook → 单一干净 source → 生成 → 下载 → 删除临时 notebook”的完整生命周期。
+- 尝试用 `~/.openclaw/skills/notebooklm/scripts/nlm-gateway.sh artifact --subcmd generate` 生成时失败，报错：`No such option: -n`。
+
+### 根因
+1. 执行时越过了 wemedia / NotebookLM 的既定生图规范，直接用了非 NotebookLM 产物顶替。
+2. `nlm-gateway.sh` 当前 `artifact generate` 封装与现版 `notebooklm` CLI 不兼容：脚本内部调用形态相当于 `notebooklm generate -n <id> ...`，但现版 CLI 需要 `notebooklm generate infographic -n <id> ...`。
+
+### 正确做法
+- 必须严格走：
+  1. `notebooklm create temp-*`
+  2. 向临时 notebook 添加 **单一干净 source**
+  3. `notebooklm generate infographic -n <temp_id> ... --wait`
+  4. `notebooklm download infographic ...`
+  5. 删除临时 notebook
+- 如 gateway 的 artifact 封装未修复，允许在**仅此环节**改走原生 `notebooklm` CLI，但不能跳过临时 notebook 生命周期。
+- 生成完后要把发布包图片路径更新到真实的 NotebookLM 产物路径，并保留最小审计记录。
+
+### 本次修复落点
+- 新图：`intel/collaboration/media/wemedia/xiaohongshu/2026-03-27-deerflow-vs-openclaw_sq_nlm.jpg`
+- 审计：`intel/collaboration/media/wemedia/xiaohongshu/2026-03-27-deerflow-vs-openclaw_nlm_audit.md`
+- 已删除临时 notebook，完成清理。
+
+## 2026-03-27 — message(action=send) + targets 静默回退到当前私聊
+
+### 现象
+- 使用 `message(action="send")` 时误传 `targets` 数组，没有报错。
+- 消息未发送到预期群，而是静默落回当前私聊会话。
+
+### 根因
+- OpenClaw 的单发动作 `send` 只接受 `target`（内部转为 `to`）。
+- `targets` 仅适用于 `action="broadcast"`。
+- 旧运行时缺少对 `send + targets` 的硬拦截，导致没有显式目标时，`normalizeMessageActionInput()` 把目标回退为 `toolContext.currentChannelId`，于是消息发回当前私聊。
+
+### 修复
+1. 在本机运行时热修 `channel-actions-*.js`：`send` 遇到 `targets` 直接报错：
+   `Use \`target\` for single-recipient actions. \`targets\` is only valid with action=\`broadcast\`.`
+2. 重启 gateway 使补丁生效。
+3. 在 `TOOLS.md` 记录硬规则：单发用 `target`，多目标必须串行单发或改用 `broadcast`。
+
+### 验证
+- 负向验证：`send + targets` 现在会直接返回错误，不再静默回退。
+- 正向验证：`send + target` 已成功发到监控群 `-5131273722`（messageId `28836`）。
+
+### 备注
+- 这是本机安装包层的热修，未来 OpenClaw 升级可能覆盖，需要保留此经验并在升级后复验。
+
+---
+
+## [ERR-20260328-001] openclaw CLI structured output polluted by plugin preamble
+
+**Logged**: 2026-03-28T11:22:00+08:00
+**Priority**: medium
+**Status**: known_quirk
+**Area**: exec / openclaw CLI parsing
+
+### Summary
+通过 `exec` 调 `openclaw browser status`、`openclaw cron runs`、`openclaw cron list` 等命令时，命令实际输出前会先打印多行 plugin preamble（例如 memory-lancedb-pro / mdMirror / memory-reflection 注册日志），导致直接按 JSON 或固定首行解析时失败。
+
+### Symptom
+- `python -c 'json.load(sys.stdin)'` 解析失败
+- 预期第一行是状态 / JSON，实际前面混入 `[plugins] ...` 多行日志
+- 需要额外 `grep` / `awk` / `tail` 过滤才能拿到结构化正文
 
 ### Root Cause
-最初判断成“缺少 `--session-id`”只对了一半，**真正根因是 `openclaw agent --agent notebooklm` 会按 agent lane 固定路由到 `session:agent:notebooklm:main`**。也就是说，即使显式传了唯一 `--session-id`，也只会改变 transcript id，**不会改变 gateway 的 lane / sessionKey**；请求仍可能撞上同一把 NotebookLM session 文件锁。
+OpenClaw CLI 启动时会输出 runtime plugin 注册日志；这些日志与真正命令结果共用 stdout / stderr，导致 `exec` 场景下的结构化解析不稳定。
 
-### Fix
-1. 放弃继续在 `openclaw agent --agent notebooklm` 这条路上打补丁。
-2. 将 `src/tools.ts` 的 Layer 3 fallback 改为**直接调用** `~/.openclaw/skills/notebooklm/scripts/nlm-gateway.sh query --agent notebooklm --notebook memory-archive --query ...`，彻底绕开 gateway lane。
-3. 同步更新回归测试：不再断言 `--session-id`，改为断言 fallback 命令直接落到 `nlm-gateway.sh query`。
-4. 复测时又发现当前配置里的 `layer3Fallback.timeout` 实际是 `45` 秒；新链路虽然打通，但偶发会被 `SIGTERM (timeout 45000ms)` 提前砍掉。于是继续修复代码，让直连 `nlm-gateway` 的路径**尊重配置 timeout**，不再套用旧 `openclaw agent` 路径遗留的 50s cap，并把 `code null` 改成携带 signal/timeout 的明确错误信息。
-5. 每次代码变更后都按既有规则清 `rm -rf /tmp/jiti` 并完整 `openclaw gateway restart`，确保 live runtime 真正吃到新代码。
+### Workaround
+1. 不要假设 `openclaw ...` 输出从第一行就是正文
+2. 对结构化结果先过滤 plugin preamble，再做 JSON 解析
+3. 类似 `cron runs` 场景优先用 `tail -40` / `awk 'BEGIN{show=0} ...'` 等方式截取正文
 
-### Validation
-- runtime worktree commits：
-  - `36d6c4a` — `fix: use nlm-gateway.sh for layer3 fallback to avoid gateway lane lock`
-  - `687420d` — `fix: honor configured timeout for nlm gateway layer3 fallback`
-- `node --test test/layer3-fallback.test.mjs` ✅
-- 真实 `memory_recall` 复测：
-  - `当前 Layer 2 和 Layer 3 的策略对比，完整一点` ✅
-  - `本周记忆系统有哪些重要变化？请详细说明` ✅
-  - `为什么之前会出现 memory-lancedb-pro beta.8 回归？` 第一次偶发 `SIGTERM (timeout 45000ms)`，手工 `nlm-gateway` 同题仅 22.97s，随后二次 `memory_recall` 复测成功 ✅
-  - `昨天的工作总结详细历史` ✅
-- 结论：`session file locked` 已不再复现；剩余风险一度变成 **45s timeout 偶发偏紧**，不是旧的 gateway lane 锁争用。
-- 2026-03-17 10:43 已将 `plugins.entries.memory-lancedb-pro.config.layer3Fallback.timeout` 从 `45` 调高到 `75`，并完成真实验证：
-  - `nlm-gateway.sh query --no-cache` 新重 query 实测 `46.607s`（旧配置会越界）
-  - 同题 `memory_recall` 在新配置下成功返回 Layer 3 ✅
-- 当前结论：这条故障链已从“session lock + 45s timeout”收口为**已修复并通过边界查询验证**。
+### Preventive Rule
+凡是用 `exec` 调 `openclaw` CLI 且要做解析时，默认先考虑 preamble 污染；不要直接把整段 stdout 送进 JSON parser。
 
-### Metadata
-- Reproducible: yes
-- Related Files: ~/.openclaw/runtime-plugins/memory-lancedb-pro/src/tools.ts, ~/.openclaw/runtime-plugins/memory-lancedb-pro/test/layer3-fallback.test.mjs
-- Fix Commit: `567a59c561494e91e92f60da890839fe027d5be9`
+## 2026-03-28 wemedia sessions_spawn model not allowed: opus
 
----
+- **错误**: `sessions_spawn(agentId="wemedia", model="anthropic/claude-opus-4-6")` → `model not allowed`
+- **原因**: wemedia agent 的 allowedModels 列表不含 opus，只含 sonnet 及以下
+- **修复**: 改用 `anthropic/claude-sonnet-4-6`，spawn 成功
+- **防止重犯**: spawn wemedia 时默认用 sonnet；如需 opus，先用 `agents_list` 或查 openclaw.json 确认 allowedModels
 
-## [ERR-20260317-002] read-offset-beyond-eof
+## 2026-03-28 NotebookLM infographic 已知限制
 
-**Logged**: 2026-03-17T06:22:00Z
-**Priority**: low
-**Status**: pending
-**Area**: docs
+1. **只输出横图（2752×1536）**，不支持方图；需要 padding 补白边转为 1:1
+2. **语言不可控**：即使 prompt 写"全中文"，生成结果可能仍为英文或中英混杂
+3. **乱码风险**：部分文字段落可能生成乱码（Latin 字符替换中文）
+4. **缓解措施**：prompt 中反复强调"ALL TEXT IN SIMPLIFIED CHINESE"；若仍出英文，视情况接受或重生成
 
-### Summary
-在继续读取 `memory/2026-03-17.md` 时，给了超出文件总行数的 offset，触发 `read` 工具错误：`Offset 120 is beyond end of file (66 lines total)`。
+## 2026-03-28 NotebookLM infographic 方图参数
 
-### Error
-```text
-Offset 120 is beyond end of file (66 lines total)
+- **正确命令**：`notebooklm generate infographic --orientation square --style bento-grid --language zh_Hans --detail detailed --wait "..."`
+- **关键**：必须加 `--orientation square`，否则默认输出横图（2752×1536）
+- **语言**：提前执行 `notebooklm language set zh_Hans`，或在 generate 时加 `--language zh_Hans`
+- **不要用 padding 补白边**：直接生成原生方图，padding 方案会损失布局完整性
+
+## 2026-03-28 wemedia 配图走捷径 + announce 不可靠
+
+### 根因1：配图命令错误导致 agent 走捷径
+- `--json --wait` 连用报错 → agent 放弃走 NotebookLM，复用目录旧图
+- `notebooklm delete -n <id> -y` 语法错误（不支持此格式）
+- 修复：AGENTS.md Step 5 已更新为今晚验证通过的正确命令格式
+
+### 根因2：announce 不触达 main 主会话
+- mode=run isolated session 的 announce 是 best-effort，不保证到达 main
+- 今晚至少3次 wemedia 完成但 main 未收到通知
+- 修复：AGENTS.md 推送规范加注 ⚠️，要求 Step 7.5 完成后必须主动 message 自媒体群
+
+### 正确的 notebooklm 命令（已验证）
+```bash
+notebooklm create "temp-{主题}-$(date +%s)"   # 创建
+notebooklm use <id>                             # 切换
+notebooklm source add /tmp/file.txt            # 加 source
+notebooklm language set zh_Hans               # 设语言
+notebooklm generate infographic \
+  --orientation square \                        # 必须加，否则出横图
+  --style bento-grid \
+  --language zh_Hans \
+  --detail detailed \
+  --wait "..."                                  # 只用 --wait，不加 --json
+cd /output/dir && notebooklm download infographic filename.png --force
+notebooklm use <id> && notebooklm delete -y   # 删除方式
 ```
 
-### Context
-- Command/operation attempted: 对 `memory/2026-03-17.md` 做分段续读
-- Input used: `offset=120`
-- Actual file size at the time: `66` lines
-- Root pattern: 先按经验猜测后续 offset，而不是先基于上一段输出或当前文件长度确认续读位置。
-
-### Suggested Fix
-1. 对短文件续读前，先看上一段 `read` 的实际结束位置，或先确认当前文件总行数。
-2. 当文件行数明显较短时，优先从较小 offset 继续读，而不是预设一个大 offset。
-3. 如果只是想验证 append 是否成功，直接从文件尾附近读（例如最近 20-40 行），不要盲目跳到远超文件长度的位置。
-
-### Metadata
-- Reproducible: yes
-- Related Files: `memory/2026-03-17.md`
-- See Also: `ERR-20260311-001`, `ERR-20260313-001`
-
----
-
----
-
-## [ERR-20260317-EDIT-UNIQUE]
-
-**Logged**: 2026-03-17T08:48:00Z
-**Priority**: medium
-**Status**: pending
-**Area**: docs
-
-### Summary
-`edit` 工具在目标文本出现多次时会直接失败；在重复段落/脏尾巴文件上不能假设匹配唯一。
-
-### Details
-修改 `shared-context/THESIS.md` 时，直接用较短的 `old_string` 替换“PR #206 跟进与合并”段落，结果命中 2 处重复文本，`edit` 返回：`Found 2 occurrences of the text ... The text must be unique.` 根因是文件尾部存在一段重复内容/乱码残留，导致同一块文本出现两次。
-
-### Suggested Action
-在对可能有重复块的文件使用 `edit` 前，先用 `grep -n` / `read` 定位重复区间；必要时带上更大上下文做唯一匹配，或先清掉重复尾巴再替换。不要在未确认唯一性的情况下用短片段直接 edit。
-
-### Metadata
-- Source: manual/main-session
-
----
-
-## [ERR-20260318-X-PUBLIC-FETCH]
-
-**Logged**: 2026-03-17T16:30:00Z
-**Priority**: medium
-**Status**: pending
-**Area**: web
-
-### Summary
-抓取 X/Twitter 公开链接时，`web_fetch` 可能因目标解析到 private/internal/special-use IP 而被 SSRF 策略拦截，不能把它当成稳定读取 X 内容的默认方案。
-
-### Details
-尝试读取 `https://x.com/Saboo_Shubham_/status/2022014147450614038` 时，`web_fetch` 返回：`Blocked: resolves to private/internal/special-use IP address`。同一任务中 Brave 搜索也因缺少 API key 不可用。最终改用 `browser open + browser evaluate(document.body.innerText)` 成功拿到正文文本。
-
-### Suggested Action
-读取公开 X 帖时优先顺序改为：
-1. 若 `xurl auth status` 可用 → 用 `xurl read`
-2. 若无鉴权且只是阅读公开内容 → 直接用 `browser` 打开并 `evaluate`/snapshot 提取文本
-3. 不把 `web_fetch` 作为读取 X 公链的主路径
-
-### Metadata
-- Source: manual/main-session
-
----
-
-## [ERR-20260318-IMAGE-MINIMAX-VLM]
-
-**Logged**: 2026-03-17T16:31:00Z
-**Priority**: medium
-**Status**: pending
-**Area**: image
-
-### Summary
-当前 image 工具背后的 MiniMax VLM 计划不支持所请求模型/能力，不能假设截图 OCR/理解一定可用。
-
-### Details
-对浏览器截图调用 `image` 试图抽取 X 页面文本时，返回：`MiniMax VLM API error (2061): your current code plan not support model, coding-plan-vlm`。这说明当前账户/套餐下，image 工具不适合作为通用网页截图 OCR fallback。
-
-### Suggested Action
-当任务目标是“从网页提文本”时，优先使用：
-1. `browser act evaluate(() => document.body.innerText)`
-2. DOM snapshot / aria snapshot
-3. 仅在页面文本确实不可直接提取时，再考虑 image 工具
-不要把 `image` 作为网页文本抽取的默认后备路径。
-
-### Metadata
-- Source: manual/main-session
-
-## [ERR-20260318-LDB] lancedb_to_lance_missing_dependency
-
-**Logged**: 2026-03-17T23:56:45.314107+00:00
-**Priority**: medium
-**Status**: pending
-**Area**: infra
-
-### Summary
-Attempted to use `lancedb.Table.to_lance()` for memory inspection, but the optional `lance` Python package was not installed.
-
-### Error
-```
-Traceback (most recent call last):
-  File ".../lancedb/table.py", line 1840, in to_lance
-    import lance
-ModuleNotFoundError: No module named 'lance'
-ImportError: The lance library is required to use this function. Please install with `pip install pylance`.
-```
-
-### Context
-- Operation attempted: inspect LanceDB memories table for duplicate/noise cleanup
-- Initial approach: `table.to_lance().to_table(...)`
-- Working fallback: use `table.to_arrow()` instead; it is already available and sufficient for row scanning / dedupe work
-
-### Suggested Fix
-Prefer `to_arrow()` for inspection scripts in this environment unless `lance`/`pylance` is explicitly installed and verified.
-
-### Metadata
-- Reproducible: yes
-- Related Files: ~/.openclaw/memory/lancedb-pro
-
----
-
-## [ERR-20260318-CHERRYPICK-PACKAGEJSON] cherry_pick_test_script_conflict
-
-**Logged**: 2026-03-18T00:38:48.844339+00:00
-**Priority**: medium
-**Status**: learned
-**Area**: git/worktree
-
-### Summary
-Cherry-picking runtime plugin commits into other worktrees repeatedly conflicted in `package.json` on the `scripts.test` line, because each branch carried a different test suite baseline.
-
-### Pattern
-- code files often auto-merge cleanly
-- `package.json` test script conflicts
-- correct resolution is to preserve branch-local tests and append newly added regression tests
-
-### Fix Pattern
-When cherry-picking test-related commits across memory-lancedb-pro worktrees:
-1. inspect conflicted `package.json`
-2. keep branch-specific existing test entries
-3. append new regression test(s) from the incoming commit
-4. `git add ... && git cherry-pick --continue`
-
----
-
-## [ERR-20260318-EDIT-EXACT-MATCH] edit_exact_text_mismatch
-
-**Logged**: 2026-03-18T00:38:48.844339+00:00
-**Priority**: low
-**Status**: learned
-**Area**: tooling
-
-### Summary
-`edit` failed because the requested old text did not match the file exactly (including whitespace / conflict markers / indentation).
-
-### Fix Pattern
-Before retrying `edit` on a conflicted or partially changed file:
-1. `read` the precise local slice again
-2. copy exact current text including whitespace and conflict markers
-3. apply the replacement against that exact block
-
----
-## [ERR-20260318-001] read-tool-offset-beyond-end
-
-**Logged**: 2026-03-18T14:33:00Z
-**Priority**: low
-**Status**: resolved
-**Area**: docs
-
-### Summary
-`read` tool was called with an offset beyond the end of `notebooklm/SKILL.md`, causing a non-fatal tool error during skill audit.
-
-### Error
-```
-Offset 261 is beyond end of file (253 lines total)
-```
-
-### Context
-- Operation: read remaining lines of `~/.openclaw/skills/notebooklm/SKILL.md`
-- Cause: used a fixed follow-up offset without checking file length from prior `wc -l`
-- Impact: no user-facing failure; work continued normally
-
-### Suggested Fix
-When paging file reads, use the known total line count first, or increment from the previous read result instead of assuming another page exists.
-
-### Metadata
-- Reproducible: yes
-- Related Files: /Users/lucifinil_chen/.openclaw/skills/notebooklm/SKILL.md
-- See Also: none
-
-### Resolution
-- **Resolved**: 2026-03-18T14:33:00Z
-- **Commit/PR**: n/a
-- **Notes**: Logged as a recurring hygiene reminder; no code change required.
-
----
-## [ERR-20260318-002] cron-check-memory-pr-status-timeout
-
-**Logged**: 2026-03-18T14:48:00Z
-**Priority**: medium
-**Status**: pending
-**Area**: infra
-
-### Summary
-`check-memory-lancedb-pr-status` cron has timed out repeatedly in main-session systemEvent mode.
-
-### Error
-```
-cron: job execution timed out
-```
-
-### Context
-- Job: `check-memory-lancedb-pr-status`
-- Recent pattern: 2 consecutive timeout runs, each close to ~16 minutes
-- Current shape: `sessionTarget=main` + `payload.kind=systemEvent`
-- Likely issue: prompt shape is too open-ended for a lightweight status-check reminder
-
-### Suggested Fix
-Convert the job to a lighter isolated run or tighten the reminder scope so it does not stall in the main session.
-
-### Metadata
-- Reproducible: yes
-- Related Files: cron job `496eeea6-7e88-4b03-b11c-df18149507c7`
-- See Also: ERR-20260318-003
-
----
-
-## [ERR-20260318-003] cron-todo-autopilot-instability
-
-**Logged**: 2026-03-18T14:48:00Z
-**Priority**: medium
-**Status**: pending
-**Area**: infra
-
-### Summary
-`todo-autopilot-v1` cron is unstable under current prompt size and workload, showing timeout and provider-side failures.
-
-### Error
-```
-cron: job execution timed out
-Error: All models failed (2): anthropic/claude-sonnet-4-6: LLM request timed out. (timeout) | openai/gpt-5.4: LLM request timed out. (timeout)
-An error occurred while processing your request... request ID 196cca68-3d4c-41ee-b6df-deaa25565a12
-```
-
-### Context
-- Job: `todo-autopilot-v1`
-- Recent pattern: cron timeout + dual-model timeout + provider 5xx/platform failure
-- Current prompt reads many files and asks for multi-step execution + dual sync + reporting
-- Earlier runs succeeded when the task stayed narrow and sync-oriented
-
-### Suggested Fix
-Shrink the prompt scope, reduce required file reads, bias toward lightweight sync/closure work, and avoid turning a recurring cron into a heavy general-purpose execution loop.
-
-### Metadata
-- Reproducible: yes
-- Related Files: cron job `5bdd1d4d-62d9-4403-aafb-fc260a7189ec`
-- See Also: ERR-20260318-002
-
----
-
-### 2026-03-19 creator-ops CDP 连接问题
-- **问题**: macOS Chrome 用 `--remote-debugging-port=9222` 启动后绑定到 IPv6 `[::1]:9222`，但脚本默认连 `127.0.0.1:9222`（IPv4），导致 404
-- **修复**: 将 `cdp_publish.py` 的 `CDP_HOST` 从 `"127.0.0.1"` 改为 `"localhost"`
-- **问题2**: 小红书创作者中心 (`creator.xiaohongshu.com`) 和主站 (`www.xiaohongshu.com`) 是独立登录态，需要分别扫码
-- **问题3**: `cdp_publish.py` 的 `--headless` 是全局参数，必须放在子命令前面（`--headless check-login`），不能放后面
-- **影响**: creator-ops skill
-- **状态**: ✅ 已修复
-
-### 2026-03-19 publish_pipeline.py 也有 127.0.0.1 硬编码
-- **问题**: cdp_publish.py 修了 CDP_HOST，但 publish_pipeline.py 的 argparse default 也硬编码了 127.0.0.1
-- **修复**: 同样改为 `localhost`
-- **教训**: 同一个项目多个入口文件可能有相同的硬编码，修一处不够，要 grep 全局检查
-- **状态**: ✅ 已修复
-
-### 2026-03-19 NLM media-research notebook 已失效
-- **问题**: notebooks.json 中的 media-research ID (cfb2b01d) 指向的 notebook 不在 notebooklm list 中，可能已被清理/过期
-- **修复**: 新建 notebook (032a95b5)，更新 notebooks.json
-- **教训**: NLM notebook 可能会意外失效，应定期用 `notebooklm list` 验证
-- **状态**: ✅ 已修复
-
-### 2026-03-19 chrome_launcher is_port_open IPv4 检测失败
-- **问题**: macOS Chrome 用 `--remote-debugging-port` 绑定到 IPv6 `[::1]:9222`，但 `is_port_open()` 用 IPv4 `AF_INET` 检测，连接被拒但 Chrome 实际在跑 → launcher 误判"Chrome 已在跑"不启动，脚本连不上
-- **修复**: 改为 IPv6 `AF_INET6` 检测，macOS 上 `AF_INET6` 可以同时连接 IPv6 和 IPv4 地址
-- **macOS 特殊性**: macOS 的 `AF_INET6` 是 dual-stack，connect 时会自动选择；Linux 上则需要 `AF_UNSPEC`
-- **状态**: ✅ 已修复 chrome_launcher.py
-
-### 2026-03-19 CDP 端口 9222 被主 Chrome 占用
-- **问题**: 晨星的主 Chrome (PID 637) 已经监听 9222 (teamcoherence 协议)，XiaohongshuProfiles 的 Chrome 启动时报 `bind() failed: Address already in use`
-- **根因**: macOS 上 Chrome 单实例，同一个 profile 不能并行；但用不同 `--user-data-dir` 可以启动多个实例，只是调试端口必须不同
-- **修复**: 将 creator-ops 脚本的 CDP_PORT 从 9222 改为 9223，chrome_launcher 启动到 9223，主 Chrome 的 9222 不冲突
-- **副作用**: 两个 Chrome 实例现在各自用独立端口（9222 主 Chrome / 9223 小红书），不影响使用
-- **状态**: ✅ 已修复（cdp_publish.py + chrome_launcher.py + publish_pipeline.py 全部改为 CDP_PORT=9223）
-
-### 2026-03-19 小红书标题字数限制 + CDP 发布按钮点击问题
-- **标题限制**: 小红书标题最多 20 个字，原标题 26 字被截断导致无法发布
-- **CDP 按钮点击**: `cdp_publish.py` 报 `PUBLISH_STATUS: PUBLISHED` 但实际未发布。根因待查（可能坐标偏移或弹窗拦截），第二次重试后成功
-- **教训**: (1) 标题生成时必须控制在 20 字以内 (2) 发布后应验证页面 URL 是否跳转到笔记管理页（而不是仍在编辑页）
-- **状态**: 标题问题已知，按钮点击问题需后续修复 cdp_publish.py 添加发布后验证逻辑
-
-### 2026-03-19 nano-banana 模型名
-- `google/gemini-3-pro-image-preview` 不可用（model not allowed），正确名称是 `google/gemini-3.1-pro-image-preview`（NanobananaPro）
-- 默认模型 `google/gemini-3.1-flash-image-preview`（Nanobanana2）效果反而更好
-## [ERR-20260321-001] web-search-gemini-unsupported-filters
-
-**Logged**: 2026-03-21T05:25:00Z
-**Priority**: low
-**Status**: pending
-**Area**: web
-
-### Summary
-在当前 gemini provider 下调用 `web_search` 时，误传了 `country` 和 `language` 参数，导致工具直接返回 unsupported filter 错误。
-
-### Error
-```text
-unsupported_country
-unsupported_language
-Only Brave and Perplexity support country/language filtering.
-```
-
-### Context
-- Operation attempted: daily AI/Agent/LLM signal scan
-- Initial parameters included: `country: "US"`, `language: "en"`
-- Actual provider behavior: gemini provider rejects these filters instead of ignoring them
-
-### Suggested Fix
-在不确定底层 provider 时，先使用最小兼容参数集（query/count/freshness/date_after/date_before）。只有确认 provider 支持时再加 `country` 或 `language`。
-
-### Metadata
-- Reproducible: yes
-- Related Files: n/a
-- See Also: none
-
----
-
-## [ERR-20260319-001] creator-ops-path-drift
-
-**Logged**: 2026-03-19T13:02:00Z
-**Priority**: medium
-**Status**: pending
-**Area**: config
-
-### Summary
-creator-ops skill 文档中的小红书脚本目录仍指向 ~/.openclaw/skills/xiaohongshu-unified，但实际脚本已迁移到 ~/.openclaw/skills/creator-ops/scripts。
-
-### Error
-```
-zsh:cd:1: no such file or directory: /Users/lucifinil_chen/.openclaw/skills/xiaohongshu-unified
-```
-
-### Context
-- Command attempted: cd ~/.openclaw/skills/xiaohongshu-unified && python3 scripts/cdp_publish.py content-data --csv-file /tmp/xhs_data.csv
-- Resolved path: ~/.openclaw/skills/creator-ops/scripts/cdp_publish.py
-- Impact: cron task would fail until path is corrected manually or in skill docs.
-
-### Suggested Fix
-更新 ~/.openclaw/skills/creator-ops/SKILL.md 中所有 xiaohongshu-unified 路径，统一改为 creator-ops 实际目录，避免后续 cron 任务继续踩坑。
-
-### Metadata
-- Reproducible: yes
-- Related Files: /Users/lucifinil_chen/.openclaw/skills/creator-ops/SKILL.md
-
----
-
-## 2026-03-19 21:28 - 事实核查过度泛化导致误判
-
-**问题**: 晨星提出黄仁勋 CNBC 采访称 OpenClaw 是"下一个 ChatGPT"的选题，小光两次拒绝发布，判定为假消息。
-
-**根因**: 推理错误——过度泛化（不是搜索范围问题）
-1. YouTube 视频标题混淆了 OpenShell 和 OpenClaw → 正确判定该视频有误
-2. 错误地将"来源A有误"泛化为"所有黄仁勋+OpenClaw说法都是假的"
-3. CNBC 采访是独立来源，Jensen 确实在采访中说了 OpenClaw 是"下一个 ChatGPT"
-4. 第三次搜索用更精准关键词才找到
-
-**修复**:
-- persona.md 新增「事实核查规则」4 条：
-  1. 每个来源独立验证（来源A有误 ≠ 所有相关说法都有误）
-  2. 不凭知识截止日期否定用户来源
-  3. 多关键词多来源搜索
-  4. 名人背书必须验证原文
-- memory_store 已记录
-
-### Metadata
-- Severity: HIGH（连续两次错误拒绝用户合理请求）
-- Reproducible: yes（任何知识截止后的真实事件都可能触发）
-- Related Files: ~/.openclaw/skills/creator-ops/persona.md
-
----
-
-## 2026-03-23: NotebookLM CLI 命令语法错误
-
-**错误 1**: `notebooklm notebook create` → 正确: `notebooklm create`（没有 `notebook` 子命令前缀）
-**错误 2**: `notebooklm delete <id> --yes` → 正确: `notebooklm delete` 不接位置参数，需要 `notebooklm use <id>` 后 `notebooklm delete`（或查 `notebooklm delete --help` 确认用法）
-**根因**: 凭印象调用，未先 `--help` 验证语法
-**教训**: 任何不确定的 CLI 先跑 `--help`（MEMORY.md 血泪教训 #5）
-
-## 2026-03-23: sub-agent message 工具配置用错 key
-
-**错误**：在 openclaw.json 中错误使用 `alsoAllow: ["message"]` 而非文档中规定的 `allow: ["message"]`。
-
-**症状**：sub-agent 反馈 "没有 message 工具权限"，无法向 Telegram 群发送通知。
-
-**根因**：schema lookup 返回的数据中同时包含 `allow`、`alsoAllow`、`deny` 三个字段（都是数组），我错误地判断 `alsoAllow` 是"允许"的意思并使用它。但官方文档（docs/tools/subagents.md）明确指出正确 key 是 `allow` 和 `deny`，其中 `deny` 优先。`alsoAllow` 在 schema 中存在但未被系统正确处理（形同无效 key）。
-
-**教训**：
-1. 配置类修改必须对照官方文档（docs/）而非仅凭 schema raw data 推断
-2. 遇到"不起作用"的配置，优先检查 key 名称是否与文档一致
-3. 官方文档示例：`tools.subagents.tools.allow: ["message"]`
-
-**修复**：将 `tools.subagents.tools.alsoAllow` 改为 `tools.subagents.tools.allow`
-
-## 2026-03-23: sub-agent message 工具配置 — 最终结论
-
-**错误**：
-1. 错误使用 `alsoAllow: ["message"]`（非有效 key）
-2. 改为 `allow: ["message"]` 后，sub-agent 反而只剩 message 工具，exec/read 等全被屏蔽
-3. 删除配置后测试确认：sub-agent 默认工具集里根本没有 `message`
-
-**最终结论**：`sessions_spawn` 创建的 isolated session 没有 `message` 工具，这是 OpenClaw 的架构限制，配置无法改变。
-
-**正确架构**：sub-agent 只返回结果，main 统一推送通知到职能群 + 监控群。
-
-**教训**：
-1. 配置更改后必须实测验证，不能只凭文档推断
-2. 当配置不起作用时，直接问用户/查源码
-3. 接受系统限制比绕过更高效
-
-**已更新**：
-- wemedia SKILL.md ✅
-- starchain pipeline-v2-8/7-contract.md ✅
-- stareval SKILL.md ✅
-
-## 2026-03-23 下午
-
-### browser act 常见错误
-1. `ref or selector is required` — 使用 x/y 坐标点击时必须提供 ref 或 selector，不能用坐标
-2. `fields are required` — kind=fill 时需要 fields 数组格式，不能用 ref+text 分开传
-3. `Error: Element "eXX" not found or not visible` — 页面已刷新，ref 失效，需要重新 snapshot
-4. `TimeoutError: locator.click: Timeout 8000ms exceeded` — Playwright locator 超时，ref 格式不匹配，改用 selector 字符串
-
-### WhatsApp Echo 问题
-- 现象：消息被重复发送/收到，疑似 gateway wspp 协议问题
-- 影响：干扰正常对话，晨星决定迁移到 Telegram
-- 状态：未解决，属于 OpenClaw WhatsApp gateway bug
-
-
-## MiniMax API 持续离线 (2026-03-24 00:32 - 持续中)
-- **现象**: `minimax/MiniMax-M2.7` 所有请求超时 120-300s，profile `minimax:cn`
-- **影响**: 8 个 cron 任务 ERROR (post-upgrade-guard, layer2-health-check, memory-quality-audit, sync-high-priority-memories, media-signal-noon/evening, media-daily-retro, todo-daily-check)
-- **Failover 行为**: 先切 minimax:cn 再切 openai/gpt-5.4，两个都超时
-- **调查**: api.minimaxi.com 返回 404 Not Found，疑似 API endpoint 变更
-- **状态**: 已报告晨星，等待指示
-
-## 2026-03-24 Gemini agentTurn + tool call 400（thought_signature 缺失）
-
-- **现象**: `media-signal-evening` 在多通道 `channel` 问题修复后，改为再次手动重跑时，Gemini provider 返回 400：`Function call is missing a thought_signature in functionCall parts`。
-- **关键信号**: 报错点明确落在工具调用（`default_api:read`），不是文件不存在，也不是路径错误。
-- **现场验证**:
-  - `DAILY-SIGNAL-BRIEF.md` / `HOT-SCAN-INBOX.md` / `HOT-QUEUE.md` 三个路径都存在且可读。
-  - 同一批路径改用 Sonnet 跑 cron 时可继续执行，因此不是 workspace 路径配置问题。
-- **结论**: 这是 Gemini provider / tool-calling 兼容性问题，不是用户配置文件里的路径写错。
-- **临时处置**: 对需要稳定 `read`/`edit`/`message` 工具链的 cron，先切到 Sonnet / GPT；Gemini 更适合纯搜索/轻推理、少工具调用场景。
-- **教训**:
-  1. 看到 `thought_signature` 相关 400，优先判定为 provider/tool 协议问题，不要先怀疑文件路径。
-  2. 多通道问题修掉后，如果仍报 Gemini 400，要直接切模型验证，不要在原模型上空转重试。
-
-## 2026-03-24 抖音 Smoke Test 踩坑记录
-
-### 问题 1：browser tool upload 路径限制
-**现象**：`browser(action=upload)` 要求文件必须在 `/tmp/openclaw/uploads/` 目录下
-**错误**：`Invalid path: must stay within uploads directory (/tmp/openclaw/uploads)`
-**解决**：测试视频/封面等文件必须先 cp 到该目录，或直接在该目录生成
-
-### 问题 2：browser tool act 的 ref 不稳定
-**现象**：对话框中的按钮 ref 在每次 snapshot 后可能变化（如 e20 在上一次 snapshot 里有，下一次就没了）
-**解决**：用 `evaluate` + JS 查找元素（className、textContent 定位），比 ref 更可靠
-
-### 问题 3：CDP WebSocket origin 被拒绝
-**现象**：`cdp_client.py` 的 websocket 连接被 Chrome 拒绝（403 Forbidden - Rejected incoming WebSocket connection from http://127.0.0.1:18800）
-**原因**：openclaw 托管的 Chrome 启动时没有 `--remote-allow-origins=*` 参数
-**影响**：自定义 CDP 脚本无法复用 openclaw browser 的登录态，必须另开 Playwright 独立 browser
-**绕过方法**：见问题 4
-
-### 问题 4：Playwright 独立 browser 无法复用登录态
-**现象**：用 Playwright 新开的 browser（即使指定了 douyin_auth.json cookies）仍然是未登录状态
-**原因**：抖音的 httpOnly cookie 无法通过 Playwright add_cookies 设置；且可能检测到 automation 控制
-**解决**：用 openclaw browser（已登录）做上传，用 Playwright 独立 browser 做封面设置
-
-### 问题 5：browser tool 上传文件后无法在 file input 中设置真实文件
-**现象**：通过 `browser(action=upload)` 触发文件选择后，JS 的 DataTransfer API 无法设置真实文件路径（安全限制）
-**解决**：openclaw browser 的 `browser(action=upload)` + 点击触发 是正确路径；问题在于 openclaw browser 的 upload 机制和 CDP upload command 是两条独立链路
-
-### 验证成功的方法
-1. **视频上传**：`openclaw browser upload <path>` + 点击上传按钮（e9/e10）→ 成功
-2. **标题填写**：`browser(action=act, kind=fill, fields=[{ref, value}])` → 成功（注意要用 fields 数组格式）
-3. **隐私设置**：checkbox click → 成功
-4. **发布**：`browser(action=act, kind=click, ref=e16)` → 成功
-5. **封面对话框**：用 evaluate JS 查找并点击元素比 ref 更可靠
-
-### 关键路径
-- 视频文件：必须放在 `/tmp/openclaw/uploads/`
-- 封面文件：同上
-- OpenClaw Browser targetId：需要先 navigate 获取当前 tab 的 targetId
-
-## 2026-03-24 gemini agent 工具缺失错误：html2text
-
-- **现象**: gemini agent 在执行 web research 时，`html2text` 命令不存在，导致工具调用失败，最终 agent 超时退出。
-- **错误信息**: `zsh:1: command not found: html2text`
-- **影响**: gemini agent 搜索任务完全失败，无任何输出。
-- **教训**:
-  1. gemini agent 的 tool-calling 环境可能缺少系统 CLI 工具（如 html2text、lynx 等）
-  2. 建议在 cron 脚本或 tool calling 环境里用之前先检查依赖是否存在，或改用纯 JSON 输出的 web_fetch
-  3. 这个错误导致研究层失败，整个 M 级流水线卡在 Step 1.5
-- **处置**: 需要重新运行研究步骤，考虑改用 web_fetch 或在 gemini 侧使用其他工具
-
-
-## 2026-03-24 小红书流水线 / cron 多坑记录
-
-### 坑1：gemini agent html2text 缺失
-- **现象**：gemini agent 在执行 web research 时调用 `html2text` CLI 工具失败，导致整条搜索链断裂，最终 agent 超时退出。
-- **根因**：gemini 模型在 tool calling 时自动选择了 `html2text` 做 HTML→markdown 转换，但运行环境里没有安装。
-- **已处置**：晨星已安装 `html2text`。
-- **教训**：gemini agent 的工具链对系统 CLI 有隐式依赖，需确保环境中所有常用 CLI 工具可用。
-
-### 坑2：gemini 模型 allowlist 限制
-- **现象**：spawn 时用 `gemini/gemini-3.1-pro-high` 报 "model not allowed"。
-- **根因**：OpenClaw 配置里 gemini 只允许 `-preview` 后缀的模型，不允许 `-high`。
-- **教训**：gemini agent spawn 统一用 `gemini/gemini-3.1-pro-preview`，不要用 `-high`。
-
-### 坑3：小红书标题逐字计数
-- **现象**：`publish_pipeline.py` 标题验证失败，"23字"实际算出来更多（Latin 字母逐字计算）。
-- **根因**：脚本逐字计数，中文字符=1，Latin 字符也=1（不是按字节），导致看似接近的字数实际超限。
-- **示例**："效率的反噬：OpenClaw核心漏洞与升级实录" → 23字 → 超限
-- **教训**：中文标题先手动压缩到 18 字以内，预留余量；最终用脚本验证。
-- **已记录**：未来创作流程中，wemedia subagent 输出标题前先压缩到 ≤18 字。
-
-### 坑4：media-signal crons 超时问题
-- **现象**：
-  - `media-signal-noon`：error（Gemini 400 thought_signature → 已切 Sonnet）
-  - `media-signal-evening`：超时 1062s（远超 300s 配置）仍未完成 → 模型切 MiniMax → 仍超时
-- **根因**：cron payload 里的 prompt 任务量超过 5 分钟预算，但 cron 系统的硬超时 (300s) 在 job timeout 之前就杀掉了进程。
-- **已处置**：
-  - 两个 cron 均已更新为 `anthropic/claude-sonnet-4-6` + 300s timeout
-  - 后续需要重新评估 prompt 任务量，或延长 timeout 到 600s
-- **教训**：信号扫描类 crons 的 prompt 需要严格控制任务范围，避免单轮跑太多搜索+写入操作。
-
-## 2026-03-25
-
-### OpenClaw cron 子命令错误
-
-**错误**：
-- `openclaw cron logs` → `error: unknown command 'logs'`
-- `openclaw cron info` → `error: unknown command 'info'`
-
-**正确子命令**：
-- `openclaw cron list` — 列出所有 cron 任务
-- `openclaw cron runs --id <job-id> --limit N` — 查看指定任务的历史运行记录
-- `openclaw cron run <job-id>` — 立即运行任务（debug）
-- `openclaw cron status` — 查看调度器状态
-
-**教训**：
-不要猜测 CLI 子命令，先 `openclaw cron --help` 确认可用命令。
-## [ERR-20260325-001] memory_forget_scope_requirement
-
-**Logged**: 2026-03-25T07:47:22.523217+08:00
-**Priority**: medium
-**Status**: pending
-**Area**: infra
-
-### Summary
-`memory_forget(memoryId=...)` can fail with "outside accessible scopes" unless `scope="agent:main"` is passed explicitly, even for IDs returned by `memory_list`/`memory_recall`.
-
-### Error
-```
-Memory deletion failed: Memory <id> is outside accessible scopes
-```
-
-### Context
-- Operation attempted: deleting duplicate memories by exact ID
-- Initial call omitted `scope`
-- Same deletion succeeded after retrying with `scope: "agent:main"`
-
-### Suggested Fix
-When deleting known memories in the main scope, always pass `scope="agent:main"` with `memory_forget` to avoid ambiguous/default-scope failures.
-
-### Metadata
-- Reproducible: yes
-- Related Files: ~/.openclaw/workspace/.learnings/ERRORS.md
-- See Also: 783cc26d-18b3-416f-a023-b5204939fdd4
-
----
-
-## [ERR-20260326-001] openclaw_cron_cli_wrong_flags
-
-**Logged**: 2026-03-26T00:55:00+08:00
-**Priority**: medium
-**Status**: pending
-**Area**: infra
-
-### Summary
-Tried `openclaw cron run <job-id> --dry-run`, but the CLI does not support `--dry-run` for `cron run`.
-
-### Error
-```
-error: unknown option '--dry-run'
-```
-
-### Context
-- Operation attempted: inspect/debug `post-upgrade-guard` cron execution without actually triggering a real run
-- Assumption was based on common CLI patterns, not OpenClaw's actual cron interface
-- Similar prior mistake: guessed `openclaw cron logs` / `info`, which also do not exist
-
-### Suggested Fix
-Before using less-common OpenClaw cron subcommands/options, run `openclaw cron --help` (or the specific subcommand help) and use only documented flags.
-
-### Metadata
-- Reproducible: yes
-- Related Files: ~/.openclaw/workspace/.learnings/ERRORS.md
-- See Also: 2026-03-25 cron command guessing entry above
-
----
-
-## [ERR-20260326-002] memory_plugin_merge_residue_duplicate_createLlmClient
-
-**Logged**: 2026-03-26T00:55:30+08:00
-**Priority**: high
-**Status**: resolved
-**Area**: config
-
-### Summary
-During the memory-lancedb-pro beta.10 upgrade, merge residue in `src/llm-client.ts` left two `createLlmClient` declarations, causing the runtime plugin to fail to load after restart.
-
-### Error
-```
-[plugins] memory-lancedb-pro failed to load ...
-Error: ParseError: Identifier 'createLlmClient' has already been declared.
-```
-
-### Context
-- Operation attempted: upgrade runtime plugin to `memory-lancedb-pro@1.1.0-beta.10`
-- A merge conflict had been resolved incompletely: old local JSON-hardening implementation and beta.10 OAuth/factory implementation both remained in the same file
-- Failure surfaced only after gateway restart, when the runtime plugin recompiled/loaded
-
-### Suggested Fix
-After resolving upgrade merges in runtime plugins, grep for duplicate exported symbols in touched files and do one post-restart plugin-load smoke check (`openclaw status` / gateway logs) before considering the upgrade complete.
-
-### Metadata
-- Reproducible: yes
-- Related Files: ~/.openclaw/runtime-plugins/memory-lancedb-pro/src/llm-client.ts, ~/.openclaw/logs/gateway.err.log
-- See Also: memory-lancedb-pro beta.10 upgrade work on 2026-03-25
-
-### Resolution
-- **Resolved**: 2026-03-25T21:33:00+08:00
-- **Commit/PR**: runtime worktree local fix
-- **Notes**: Removed duplicate `createLlmClient` block, kept beta.10 OAuth/factory implementation plus local JSON-defense behavior, restarted gateway, and verified `memory_stats` / `memory_list` / `memory_recall` / isolated write smoke all passed.
-
----
-## [ERR-20260326-003] git_add_pathspec_deleted_untracked_files
-
-**Logged**: 2026-03-26T01:20:00+08:00
-**Priority**: medium
-**Status**: resolved
-**Area**: infra
-
-### Summary
-After deleting a mixed set of tracked and untracked workspace files, `git add -A -- <paths...>` failed because the path list still included untracked files that no longer existed (for example `.DS_Store`).
-
-### Error
-```
-致命错误：路径规格 '.DS_Store' 未匹配任何文件
-subprocess.CalledProcessError: ... git add -A -- <paths...> returned non-zero exit status 128
-```
-
-### Context
-- Operation attempted: batch-clean temporary workspace artifacts, then stage only that cleanup as an isolated commit
-- The deletion list mixed tracked files with untracked files
-- Once deleted, some untracked files no longer matched any git pathspec, which caused `git add` to abort
-
-### Suggested Fix
-When staging deletions from a mixed file set, first filter with `git ls-files --error-unmatch` and run `git add -u -- <tracked-paths>` only on paths that are actually tracked.
-
-### Metadata
-- Reproducible: yes
-- Related Files: ~/.openclaw/workspace/.learnings/ERRORS.md
-- See Also: ERR-20260326-001
-
-### Resolution
-- **Resolved**: 2026-03-26T01:16:00+08:00
-- **Commit/PR**: 9d2205c
-- **Notes**: Re-ran staging with a tracked-only filter and committed the cleanup successfully.
-
----
-## [ERR-20260326-004] edit_tool_non_unique_anchor_match
-
-**Logged**: 2026-03-26T01:24:00+08:00
-**Priority**: low
-**Status**: resolved
-**Area**: infra
-
-### Summary
-Tried to use the `edit` tool with an `old_string` anchor that appeared many times in the file, so the edit failed with a non-unique match error.
-
-### Error
-```
-Found 28 occurrences of the text ... The text must be unique. Please provide more context to make it unique.
-```
-
-### Context
-- Operation attempted: append a new error entry into `.learnings/ERRORS.md`
-- Used a generic anchor (`---`) that appears repeatedly between entries
-- The edit tool requires an exact unique match, so generic separators are unsafe anchors in append-heavy markdown logs
-
-### Suggested Fix
-For append-heavy files, avoid `edit` with generic separators. Use either:
-1. `exec` with shell append (`cat >> file <<'EOF' ... EOF`), or
-2. `edit` with a longer unique trailer block from the file tail.
-
-### Metadata
-- Reproducible: yes
-- Related Files: ~/.openclaw/workspace/.learnings/ERRORS.md
-- See Also: ERR-20260326-003
-
-### Resolution
-- **Resolved**: 2026-03-26T01:18:00+08:00
-- **Commit/PR**: c5a8511
-- **Notes**: Switched to shell append and then staged/committed normally.
-
----
+## 2026-03-29 persistent session 在 Telegram 直聊不可用
+
+- `mode="session"` 需要 `thread=true`，但 Telegram 直聊没有注册 subagent_spawning hooks
+- `thread=true` 只在 Discord thread 环境下可用
+- **结论**：Telegram 主通道只能用 `mode="run"` isolated session
+- **替代方案**：mode=run + 任务里硬性要求 sessions_send 回 main（Step 6/7.5 完成时）
+
+
+## 2026-03-29 新建 agent 必须显式配置 tools.allow + subagents.allowAgents
+- **现象**：织梭（weaver）spawn 后，用 gateway CLI 尝试调用 sessions_spawn/sessions_send，报 `unknown method: sessions.spawn`
+- **根因**：openclaw.json 里 weaver agent 没有配置 tools 字段，默认只有基础工具（read/write/exec/browser），没有 sessions_spawn/sessions_send/message
+- **修复**：在 openclaw.json weaver agent 条目加 tools.allow 和 subagents.allowAgents，gateway restart
+- **预防**：新建需要编排其他 agent 的 agent，必须同时配置：
+  1. agents.list 条目（id/workspace/model）
+  2. bindings（群绑定）
+  3. allowAgents（主 agent 的 subagents.allowAgents）
+  4. **tools.allow（含 sessions_spawn/sessions_send/message）**
+  5. **subagents.allowAgents（可 spawn 的子 agent 列表）**
+
+
+## 2026-03-29 新建 agent 必须调用 agent-config-generator skill
+- **现象**：新建 weaver agent 时，IDENTITY/SOUL/HEARTBEAT/USER/TOOLS 全部用了系统默认空壳模板
+- **根因**：只写了 AGENTS.md，没有调用 agent-config-generator skill 生成配置三件套
+- **修复**：手动补写五件套文件
+- **预防**：新建任何 agent 时，必须先读 agent-config-generator SKILL.md，用它生成 SOUL/IDENTITY/HEARTBEAT，再手写 AGENTS.md
+
+
+## 2026-03-29 编排型 agent 必须配置 maxSpawnDepth:2
+- **现象**：织梭 sessions_spawn 调用报 `Tool sessions_spawn not found`
+- **根因**：OpenClaw 默认 maxSpawnDepth:1，depth-1 subagent 无法 spawn depth-2 子 agent；tools.allow 里加 sessions_spawn 无效，必须通过 maxSpawnDepth 控制
+- **修复**：在 weaver agent 条目的 subagents 里加 `maxSpawnDepth: 2`
+- **预防**：新建需要 spawn 子 agent 的编排型 agent，必须在 openclaw.json 对应 agent 条目加 `subagents.maxSpawnDepth: 2`
+- **注意**：maxSpawnDepth 范围 1-5，推荐用 2（main→织梭→worker），不要超过需要

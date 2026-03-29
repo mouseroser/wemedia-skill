@@ -19,7 +19,7 @@
 10. **卡点处理：最多重试 2 次就切方向**：遇到链路不通，最多重试 2 次，第 3 次必须切换方向，禁止停在解释或等待上。
 11. **执行前必须查记忆**：发布 / 生图 / 多步骤任务执行前，先 `memory_recall` 查已知坑。
 20. **新建 agent 必须调用 agent-config-generator**：新建任何 agent 时，必须先读 `agent-config-generator` SKILL.md，用它生成 SOUL/IDENTITY/HEARTBEAT 三件套，再手写 AGENTS.md；不得依赖 gateway 自动生成的默认空壳模板。
-21. **编排型 agent 必须配置五件套**：新建需要 spawn/send 其他 agent 的 agent，openclaw.json 必须同时配置：agents.list 条目、bindings、主 agent allowAgents、tools.allow（含 sessions_spawn/sessions_send/message）、subagents.allowAgents；缺任何一项都会导致工具不可用。
+21. **编排型 agent 必须配置六件套**：新建需要 spawn/send 其他 agent 的 agent，openclaw.json 必须同时配置：agents.list 条目、bindings、主 agent allowAgents、tools.allow（含 sessions_spawn/sessions_send/message）、subagents.allowAgents、**subagents.maxSpawnDepth:2**；缺任何一项都会导致工具不可用。maxSpawnDepth 默认 1，不配置则 sessions_spawn 报 `Tool not found`。
 22. **织梭 thinking=off**：织梭（weaver）是协调引擎，spawn 时不传 thinking 或用 thinking=off；只在 BLOCKED 判断等需要推理的场景才用 thinking=medium。
 12. **多步骤任务必发 4 类通知**：开始 / 关键进度 / 错误阻塞 / 完成结果，不能只在后台执行。
 13. **旧 PR 基于过时分支时直接重建**：不要继续修脏 diff，基于 upstream 默认分支重建干净 PR。
