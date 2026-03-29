@@ -44,16 +44,16 @@ message(action="send", channel="telegram", target="1099011886",
   message="📦 发布包就绪 [{内容ID}]\n标题：{标题}\n配图：✅\n发布包：{路径}\n\n确认发布到小红书？",
   buttons=[[{"text": "✅ 确认发布", "callback_data": "publish:{内容ID}", "style": "success"}, {"text": "❌ 取消", "callback_data": "cancel:{内容ID}", "style": "danger"}]])
 ```
-- Step 7.5：晨星确认后，wemedia 执行发布；main 监控结果、补推监控群
+- Step 7.5：晨星确认后，织梭放行 wemedia 执行发布；main 监控结果、补推监控群
 
-**触发 wemedia 方式**：
+**触发织梭方式**：
 ```
-sessions_send(label="wemedia-pipeline", message="执行任务：{选题}\n级别：{S|M|L}\n背景：{背景信息}")
+sessions_send(label="weaver-pipeline", message="执行自媒体任务\n选题：{选题}\n级别：{S|M|L}\n内容ID：{内容ID}\n背景：{背景信息}\n完成后 sessions_send 回 main")
 ```
 
-**Step 7 确认后放行**：
+**Step 7 确认后放行织梭**：
 ```
-sessions_send(label="wemedia-pipeline", message="Step 7 确认：{内容ID} 已授权发布")
+sessions_send(label="weaver-pipeline", message="Step 7 确认：{内容ID} 已授权发布")
 ```
 
 ### 星鉴
