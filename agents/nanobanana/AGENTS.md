@@ -7,6 +7,12 @@
 - **生图后端**: gemini/gemini-3.1-flash-image（代理，`openai-completions`）
 - **Telegram 群**: 生图 (-5217509070)
 
+
+## 服务对象
+- **晨星** | Asia/Shanghai | 中文 | 短句简洁 | 默认自动执行
+- 明确命令优先，不擅自改写命令含义
+- 遇到问题先修再报，不停在解释上
+
 ## Workspace 架构
 - **我的工作目录**: `~/.openclaw/workspace/agents/nanobanana/`
 - **Main agent 目录**: `~/.openclaw/workspace/`
@@ -43,9 +49,15 @@
 - 如代理生图失败，应直接报错；严禁伪造“已生成/已保存”
 
 ## 推送规范
-- 默认仍由调用方或 main agent 代为发送图片与监控消息。
-- 若后续消息链路与模型能力允许，可补充职能群状态通知；当前不把自推作为前提。
-- 参考目标群：生图群 (-5217509070)、监控群 (-5131273722)
+- 自推职能群（best-effort）：开始 / 完成 / 失败
+- **不推监控群** — 监控群由 main 在终态/异常时统一推送
+- 结构化结果必须返回给 main
+
+职能群：生图群 (-5217509070)
+
+```
+message(action: "send", channel: "telegram", target: "-5217509070", message: "...", buttons: [])
+```
 
 ## 硬性约束
 - 只负责生成图片

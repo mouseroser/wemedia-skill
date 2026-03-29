@@ -735,3 +735,16 @@ notebooklm use <id> && notebooklm delete -y   # 删除方式
 - **根因**：OpenClaw auto-announce 是 push-based，子 agent 完成时推回给织梭，织梭 session 必须保持活跃才能接收；不调用 sessions_yield 则 session 结束，announce 无人接收
 - **修复**：在 weaver tools.allow 加入 sessions_yield；每次 sessions_spawn 后立即调用 sessions_yield 挂起等待
 - **预防**：编排型 agent 在 spawn 子 agent 后必须调用 sessions_yield，不得依赖 auto-announce 被动等待
+
+
+## 2026-03-29 wemedia 缺少 sessions_send/message 工具权限
+- **现象**：wemedia 草稿写完后用 CLI --label 回传，报 unknown option，无法通知织梭
+- **根因**：wemedia tools.allow 只有 read/write/exec/browser，没有 sessions_send/message
+- **修复**：加入 sessions_send 和 message 到 wemedia tools.allow
+- **预防**：所有需要回传结果或推送通知的 agent，tools.allow 必须包含 sessions_send 和 message
+
+## 2026-03-29 子 agent（gemini/openai/claude/notebooklm）缺少 sessions_send/message 工具权限
+- **现象**：子 agent 完成任务后用 CLI `sessions` 命令回传，报 "too many arguments" 错误，无法通知织梭
+- **根因**：这些 agent 的 tools.allow 为空（默认工具集），没有 sessions_send/message
+- **修复**：openclaw.json 里 gemini/openai/claude/notebooklm 全部加入 sessions_send + message，gateway restart
+- **预防**：新建 agent 或新增回传需求时，必须检查 tools.allow 是否包含 sessions_send 和 message；不只检查编排层（weaver/wemedia），所有需要回传结果的子 agent 都要检查

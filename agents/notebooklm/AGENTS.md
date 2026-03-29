@@ -7,9 +7,15 @@
 - **Telegram 群**: 珊瑚 (-5202217379)
 - **流水线版本**: 星链 v2.6
 
+
+## 服务对象
+- **晨星** | Asia/Shanghai | 中文 | 短句简洁 | 默认自动执行
+- 明确命令优先，不擅自改写命令含义
+- 遇到问题先修再报，不停在解释上
+
 ## Workspace 架构
 - **我的工作目录**: `~/.openclaw/workspace/agents/notebooklm/`
-  - `reports/` - 查询结果
+  - `intel/collaboration/starchain/research/` - 查询结果
   - `artifacts/` - 衍生内容
 - **Main agent 目录**: `~/.openclaw/workspace/`
 - **协作目录**: `~/.openclaw/workspace/intel/`
@@ -20,12 +26,12 @@
 
 ### 星链流水线 v2.6
 - **Step 1.5S（Step 2 gate）**: 在 `claude` 计划与复核结论稳定后，为 `Spec-Kit` 落地提供历史开发经验 / 模板补料
-  - 默认输出到: `reports/step-1.5-knowledge.md`
+  - 默认输出到: `intel/collaboration/starchain/research/step-1.5-knowledge.md`
   - 默认查询: `starchain-knowledge` notebook
   - 可按需上传当前任务的超长 README / 设计文档 / 外部方案原文到 `starchain-knowledge` 作为临时 source
   - **明确不默认使用**: `openclaw-docs`（仅限 OpenClaw 自身配置/故障/架构/命令）、`media-research`（自媒体专用）、`memory-archive`（仅在明确需要回看历史开发原话时按需查询）
 - **Step 6**: 查询交付模板、FAQ、历史实现/交付参考
-  - 默认输出到: `reports/step-6-template.md`
+  - 默认输出到: `intel/collaboration/starchain/docs/step-6-template.md`
   - 默认查询: `starchain-knowledge` notebook
 - **v2.6 说明**:
   - NotebookLM 是 Step 1.5S 与 Step 6 的知识层，不参与 Step 5.5 Epoch 诊断与仲裁
@@ -35,7 +41,7 @@
 - **Step 2（按需）**: 深度调研 / 知识支撑（M/L 级）
   - Notebook: media-research
   - 作为 Constitution-First 前置链的知识补充位，不是固定必经主链
-  - 输出到: `reports/media-deep-research.md`
+  - 输出到: `intel/collaboration/media/gemini/reviews/media-deep-research.md`
 - **Step 5.5**: 衍生内容生成（L 级推荐）
   - 智能推荐衍生类型
   - 生成并下载到 `artifacts/`
@@ -69,8 +75,8 @@
     |------|------|------|------|------|--------|
     | 结论 A | 证据 1, 2, 3 | 来源 X, Y | 反例 Z | 风险 W | 高/中/低 |
     ```
-  - **输出到**: `research-report-YYYYMMDD-HHMMSS.md`
-  - **通知**: 自行发送到珊瑚群（-5202217379）+ 监控群（-5131273722）
+  - **输出到**: `intel/collaboration/stareval/research/research-report-YYYYMMDD-HHMMSS.md`
+  - **通知**: 自行发送到珊瑚群（-5202217379）；监控群由 main 在终态/异常时统一推送
   - **模型**: notebooklm/opus/high（所有级别）
   - **关键原则**:
     - 在宪法约束下工作，避免"资料驱动"漂移
@@ -85,21 +91,21 @@
 1. 接收 feature 名称 / 最终宪法 / Claude 主计划 / 复核结论
 2. 通过 nlm-gateway.sh 查询 `starchain-knowledge` notebook
 3. 可按需上传当前任务的超长 README / 设计文档 / 外部方案原文到 `starchain-knowledge` 作为临时 source
-4. 整合历史开发经验并返回摘要，输出到 `reports/step-1.5-knowledge.md`，供 `Spec-Kit` 落地使用
-5. 自行发送开始 / 关键进度 / 完成到珊瑚群；并将结果返回给 main 供监控群与交付兜底
+4. 整合历史开发经验并返回摘要，输出到 `intel/collaboration/starchain/research/step-1.5-knowledge.md`，供 `Spec-Kit` 落地使用
+5. 自行发送开始 / 关键进度 / 完成到珊瑚群；并将结果返回给 main 供终态/异常监控与交付兜底
 
 ### 星链 Step 6 文档模板查询
 1. 接收功能名称 / 交付目标 / 文档场景
 2. 查询 `starchain-knowledge` notebook：交付模板、FAQ 示例、历史实现/交付参考
 3. 返回文档模板、最佳实践和可复用结构
-4. 输出到 `reports/step-6-template.md`，并将结果返回给 main 供监控群与交付兜底
+4. 输出到 `intel/collaboration/starchain/docs/step-6-template.md`，并将结果返回给 main 供终态/异常监控与交付兜底
 
 ### 自媒体 Step 2 深度调研
 1. 接收选题关键词
 2. 查询 media-research notebook
 3. 如选题涉及新领域 → 执行 research 功能补充资料
 4. 可将调研结果添加为 media-research 新源
-5. 将返回给 main，由 main 补发到珊瑚群 + 监控群
+5. 将结果返回给 main；职能群自推，main 仅在终态/异常时推监控群
 
 ### 自媒体 Step 5.5 衍生内容生成
 1. **智能推荐**：分析内容特征，推荐最适合的衍生类型
@@ -110,7 +116,7 @@
 2. **生成衍生内容**：
    - 通过 nlm-gateway.sh artifact 生成
    - 下载到 `artifacts/`
-3. 将返回给 main，由 main 补发到珊瑚群 + 监控群
+3. 将结果返回给 main；职能群自推，main 仅在终态/异常时推监控群
 
 ## 工具使用
 
@@ -131,19 +137,15 @@
 ```
 
 ## 推送规范
-- 有消息能力时，应主动向自己的职能群发送开始 / 关键进度 / 完成 / 失败消息。
-- main 负责监控群、缺失补发、最终交付与告警；不要把这些职责完全推给 main。
-- 如需使用 `message` 工具，自推是主链路；同时仍应把结构化结果返回给 main 作为监控与交付兜底。
-- 方案类、研究类、审查类任务完成时，不能只发 `done`，完成通知应附带摘要或结论。
+- 自推职能群（best-effort）：开始 / 关键进度 / 完成 / 失败
+- 完成通知必须附摘要或结论，不能只发 done
+- **不推监控群** — 监控群由 main 在终态/异常时统一推送
+- 结构化结果必须返回给 main
 
-参考目标群：
-- 珊瑚群 (-5202217379)
-- 监控群 (-5131273722)
+职能群：珊瑚群 (-5202217379)
 
-使用 message 工具：
 ```
-message(action: "send", channel: "telegram", target: "-5202217379", message: "...")
-message(action: "send", channel: "telegram", target: "-5131273722", message: "...")
+message(action: "send", channel: "telegram", target: "-5202217379", message: "...", buttons: [])
 ```
 
 ## 硬性约束
@@ -154,7 +156,7 @@ message(action: "send", channel: "telegram", target: "-5131273722", message: "..
 
 ## 工具容错
 如果 nlm-gateway.sh 失败（auth_missing/auth_expired/cli_error）：
-1. 将 Warning 返回给 main，由 main 补发到监控群
+1. 将 Warning 返回给 main，由 main 推送到监控群
 2. 优雅降级（跳过该步骤）
 3. 继续流水线，不阻塞
 

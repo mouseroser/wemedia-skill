@@ -1,88 +1,67 @@
-# 📡 Daily Signal Brief — 2026-03-24 (Tue) 06:19 CST
+# 每日信号简报｜2026-03-29
 
-> 扫描范围：HN Front Page + GitHub Trending + Google News + Reddit (过去 12h)
-> 扫描 agent：gemini (cron:media-signal-morning)
+> 扫描时间：2026-03-29 07:30 CST（Asia/Shanghai）
+> 范围：过去 12 小时内可见的 AI / Agent / LLM 相关热点
+> 依据：`shared-context/MEDIA-CONSTITUTION.md`
+> 结论：今天仍然是 **Agent 工作流 / Skill 化 / coding agent 自进化** 的高相关信号日；有 3 条值得进入晨星内容机会池，其中 2 条具备较强方法论表达空间。
 
----
+## Top Signals
 
-## 🔥 高相关度热点（与晨星方向直接相关）
+### 1) 🔴 Cursor：real-time RL 改进 Composer
+- **来源**：Cursor 官方博客
+- **链接**：https://cursor.com/blog/real-time-rl-for-composer
+- **为什么相关**：和晨星核心方向“AI / Agent / 工作流实操与方法论”高度一致。它不是单纯功能更新，而是在回答：AI 编程工具会不会开始根据真实使用不断自我优化？
+- **可提炼角度**：
+  1. AI 编程工具正在从“助手”变成“持续进化的系统”
+  2. real-time RL 对普通开发者真正意味着什么，哪些是噱头，哪些会改变体验
+  3. coding agent 的下一阶段竞争，可能不只是模型能力，而是反馈闭环能力
+- **内容潜力**：⭐⭐⭐⭐⭐
+- **时效判断**：🟡 今日有效
+- **我的判断**：适合做“趋势 + 判断”型内容，不用追求第一时间快讯，也能讲出方法论价值。
 
-### 1. ⭐ OpenAI vs Anthropic 企业竞争白热化
-- **来源**：[Reuters — 3h ago](https://www.reuters.com/business/openai-sweetens-private-equity-pitch-amid-enterprise-turf-war-with-anthropic-2026-03-23/)
-- **要点**：OpenAI 加紧融资应对 Anthropic 进攻；企业客户选择 Anthropic 速度是 OpenAI 的 3 倍（基于 Ramp 数据）；OpenAI 反驳该数据"insane"
-- **相关度**：⭐⭐⭐⭐ — OpenClaw vs Claude Code Channels 大背景；Anthropic 的进攻性是近期竞品热的根源
-- **小红书角度**：「AI 编程工具大战：为什么企业开始转向 Anthropic 了？」
-- **时效性**：🟡 48h 窗口（大厂竞争持续热议）
-- **来源2**：[National Today — 1d ago](https://nationaltoday.com/us/ca/san-francisco/news/2026/03/22/openai-to-double-workforce-by-year-end-to-rival-anthropic-google/)：OpenAI 年底前人数翻番
+### 2) 🔴 `superpowers`：Agentic Skills Framework 持续爆量
+- **来源**：GitHub Trending / Repo
+- **链接**：https://github.com/trending / https://github.com/obra/superpowers
+- **为什么相关**：与晨星当前 agent / skill / workflow 方向几乎直接同构。它的传播价值不在“又一个开源项目”，而在“越来越多人开始把 AI 工作流做成技能系统”。
+- **可提炼角度**：
+  1. 为什么 prompt 工程正在被 skill 工程替代
+  2. Skill 化工作流为什么更适合团队协作、复用和维护
+  3. 晨星自己的 OpenClaw / Skills 体系能从这类项目学到什么
+- **内容潜力**：⭐⭐⭐⭐⭐
+- **时效判断**：🟢 常青 + 今日热度
+- **我的判断**：今天最适合做“小红书方法论拆解”的题。
 
-### 2. ⭐ GitAgent：AI Agent 的 Docker 来了
-- **来源**：[MarkTechPost — 1d ago](https://www.marktechpost.com/2026/03/22/meet-gitagent-the-docker-for-ai-agents-that-is-finally-solving-the-fragmentation-between-langchain-autogen-and-claude-code/) / [Qiita 日语教程 — 16h ago](https://qiita.com/AI-SKILL-LAB/items/07ac71e29f46d3b773b0)
-- **要点**：GitAgent 实现"一次定义，到处部署"——Claude Code、OpenAI、LangChain、CrewAI、AutoGen 之间无缝切换；解决 AI Agent 碎片化问题
-- **相关度**：⭐⭐⭐⭐ — 与 OpenClaw 生态位高度重叠；是 OpenClaw 的竞品/补充工具
-- **小红书角度**：「AI Agent 的容器化来了！一行命令部署任何 Agent 框架」
-- **时效性**：🟡 48h（新兴概念仍在发酵）
-- **对比价值**：OpenClaw 定位 vs GitAgent — 两者都是解决碎片化，路径不同
+### 3) 🟡 `.claude/` 文件夹方法论热度延续
+- **来源**：Hacker News + 原文博客
+- **链接**：https://news.ycombinator.com/item?id=47543139 / https://blog.dailydoseofds.com/p/anatomy-of-the-claude-folder
+- **为什么相关**：围绕“如何把 agent 的规则、上下文、记忆、技能沉淀为文件结构”的讨论，和晨星内容定位高度吻合，且有很强可复制性。
+- **可提炼角度**：
+  1. `.claude/` 本质上是在把 prompt 升级为 agent 操作系统
+  2. 为什么文件化上下文比纯聊天更容易形成复利
+  3. 怎么理解 `.claude/`、OpenClaw Skills、memory 分层这些方案的差异
+- **内容潜力**：⭐⭐⭐⭐⭐
+- **时效判断**：🟡 24h 内有效
+- **我的判断**：如果今天只做一条偏方法论的内容，这条仍然值得保留优先级。
 
-### 3. ⭐ Visa 推出 AI Agent 支付 CLI
-- **来源**：[CoinPaprika — 2d ago](https://coinpaprika.com/news/visa-cli-tool-ai-agents-card-payments-securely/)（GitHub beta 发布：2026-03-17）
-- **要点**：Visa Crypto Labs 发布 CLI 工具，允许 AI Agent 安全进行信用卡支付；3月17日已上线 GitHub beta
-- **相关度**：⭐⭐⭐ — AI Agent 落地场景扩展；但非核心内容领域
-- **小红书角度**：「AI Agent 也能网购付款了？Visa 刚发布的这个工具有点意思」
-- **时效性**：🟡 72h（支付场景落地，AI Agent 能力边界再次扩展）
+## 弱相关 / 暂不纳入
+- [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) — 相关，但更像生态增强信号，适合作为补充例子，不一定单独发。
+- [AI-Scientist-v2](https://github.com/SakanaAI/AI-Scientist-v2) — 趋势价值高，但研究味重，适合做“Agent 能力边界外移”的背景材料。
+- [Product Hunt AI Coding Agents 分类页](https://www.producthunt.com/categories/ai-coding-agents) — **[UNVERIFIED]** 可做赛道拥挤度侧证，不适合单独当新闻。
 
-### 4. ⭐ a16z 预测 AI Agent 将终结互联网广告
-- **来源**：[ForkLog — 13h ago](https://forklog.com/en/a16z-predicts-the-end-of-internet-advertising-due-to-ai-agents/)
-- **要点**：a16z 合伙人预言：2026年 AI Agent 将摧毁现有互联网广告模式（类比1997年互联网无商业模式）；广告的商业逻辑正在失效
-- **相关度**：⭐⭐⭐ — AI Agent 行业宏观判断；可做深度解读素材
-- **小红书角度**：「硅谷顶级 VC 说 AI Agent 要干掉广告了，这对中国意味着什么？」
-- **时效性**：🟢 常青（宏观判断类，窗口宽）
-- ⚠️ [UNVERIFIED] — a16z 原文具体发布时间和措辞需确认
+## 今天最值得拿去做内容的方向
+1. **为什么 agent 工作流正在从 prompt 工程转向 skill 工程**
+2. **Cursor 用 RL 改 Composer，AI 编程工具是不是开始自我进化了**
+3. **`.claude/` 文件夹到底在解决什么问题：上下文工程如何产品化**
 
-### 5. ⭐ RSAC 2026：AI Agent 成网络安全主角
-- **来源**：[The Register — 10h ago](https://www.theregister.com/2026/03/23/rsa_2026_san_francisco/)
-- **要点**：RSAC 2026 在旧金山开幕，AI Agent 成为所有厂商关键词；安全厂商展示 Agent 自动化渗透测试平台
-- **相关度**：⭐⭐⭐ — 安全是 AI Agent 落地的关键维度；可与 OpenClaw 安全话题联动
-- **小红书角度**：「RSAC 把 AI Agent 列为最大关键词，安全厂商们在赌什么？」
-- **时效性**：🟡 48h（会议期间持续有内容产出）
+## Publishability Gate 预判
+- **相关度**：高
+- **独特价值**：高，前提是从晨星自己的实操/判断切入，而不是纯转述
+- **是否值得发**：值得进入今日机会池
+- **是否紧急**：否；今天更适合做“高质量方法论内容”，不是必须抢 4h 窗口的突发新闻
 
----
-
-## 📊 GitHub Trending 关键项目（AI/Agent 相关）
-
-| 项目 | Stars/Today | 说明 | 相关度 |
-|------|-------------|------|--------|
-| [everything-claude-code](https://github.com/affaan-m/everything-claude-code) | ~3,735 ⭐/d (97.8K总) | Agent harness 优化合集 | ⭐⭐⭐⭐⭐ |
-| [GitAgent](https://github.com/chinatech/GitAgent) | [NEW] (估算 800+ ⭐/d) | Docker for AI Agents，框架无关 | ⭐⭐⭐⭐ |
-| [claude-hud](https://github.com/jarrodwatts/claude-hud) | 832 ⭐/d (11.1K总) | Claude Code 实时监控 HUD | ⭐⭐⭐⭐ |
-| [deer-flow](https://github.com/bytedance/deer-flow) | 1,508 ⭐/d (35.2K总) | 字节 SuperAgent 框架 | ⭐⭐⭐⭐ |
-| [TradingAgents](https://github.com/TauricResearch/TradingAgents) | 1,108 ⭐/d (37K总) | 多 Agent 金融交易 | ⭐⭐⭐ |
-| [pentagi](https://github.com/vxcontrol/pentagi) | 1,015 ⭐/d (11.9K总) | AI 渗透测试 Agent | ⭐⭐⭐ |
-| [browser-use](https://github.com/browser-use/browser-use) | 405 ⭐/d (82.5K总) | AI Agent 浏览器自动化 | ⭐⭐⭐ |
-
----
-
-## 📰 Google News / Reddit 补充信号
-
-| 标题 | 来源 | 时效 | 说明 | 相关度 |
-|------|------|------|------|--------|
-| Malicious LLM prompts 可被实时检测 | Betanews | 8h | 安全新方向：LLM 本身成为威胁检测器 | ⭐⭐⭐ |
-| OpenAI impact surveys 延期至 3/31 | Releasebot | 1d | 不是重大事件但有项目管理价值 | ⭐⭐ |
-| Anthropic Claude Opus 4.6 | Wikipedia | 17h | Claude 4 系列持续迭代 | ⭐⭐⭐ |
-| YC CEO Garry Tan 晒 Claude Code 完整配置 | Product Hunt | 5h | 继续维持 Claude Code 热度 | ⭐⭐⭐⭐ |
-
----
-
-## 🎯 今日判断
-
-**紧急热点**：无新的 4h 插队级别热点。昨日 URGENT-A/B 已处理完毕。
-
-**优质选题池（今日可启动）**：
-1. **Claude Code Channels vs OpenClaw 对比**（S级，昨日 inbox 已有储备）
-2. **GitAgent vs OpenClaw 生态位对比**（M级，新增，可做技术对比文）
-3. **AI 编程 vs 垃圾代码辩论**（M级，常青储备，可今日做）
-
-**不建议追**：Visa 支付 CLI（非内容核心领域）、RSAC 安全（太偏安全）
-
----
-
-_Generated by media-signal-morning cron | Next scan: 12:00 CST_
+## 结论
+- 今日高相关主题仍然集中在：**Skill 化、文件化上下文、coding agent 自进化**。
+- 若今天安排一条内容，优先顺序建议：
+  1. `superpowers` / skill 工程
+  2. Cursor RL for Composer
+  3. `.claude/` 文件夹方法论

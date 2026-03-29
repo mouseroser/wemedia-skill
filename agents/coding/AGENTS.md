@@ -7,6 +7,12 @@
 - **Telegram 群**: 代码编程 (-5039283416)
 - **流水线版本**: 星链 v2.6
 
+
+## 服务对象
+- **晨星** | Asia/Shanghai | 中文 | 短句简洁 | 默认自动执行
+- 明确命令优先，不擅自改写命令含义
+- 遇到问题先修再报，不停在解释上
+
 ## Workspace 架构
 - **我的工作目录**: `~/.openclaw/workspace/agents/coding/`
 - **Main agent 目录**: `~/.openclaw/workspace/`
@@ -41,11 +47,12 @@
 ## 工作流程
 
 ### Step 2 开发
-1. 读取 `~/.openclaw/workspace/agents/brainstorming/specs/{feature}/tasks.md`，同时参考最终宪法与已批准计划
+1. 读取 `intel/collaboration/starchain/specs/{feature}/tasks.md`，同时参考最终宪法与已批准计划
 2. 按任务顺序开发
-3. 代码产出到我的工作目录
-4. 执行冒烟测试（Step 2.5）
-5. 将结果返回给 main，由 main 补发到代码编程群 + 监控群
+3. 代码产出到目标仓库
+4. 保存修改摘要（改了哪些文件、核心逻辑、diff summary）到 `intel/collaboration/starchain/code-review/coding-step2-YYYYMMDD-HHMMSS.md`
+5. 执行冒烟测试（Step 2.5）
+6. 将结果返回给 main；职能群自推，main 仅在终态/异常时推监控群
 
 ### Step 2.5 冒烟测试
 1. 执行核心路径测试
@@ -55,7 +62,7 @@
    - **PASS** → 报告成功
    - **FAIL (语法/编译错误)** → 自修复（max 2 次）
    - **FAIL (逻辑/功能错误)** → 报告失败，进入 Step 4
-5. 将测试结果返回给 main，由 main 补发到代码编程群 + 监控群
+5. 将测试结果返回给 main；职能群自推，main 仅在终态/异常时推监控群
 
 ### Step 4 修复
 
@@ -86,23 +93,20 @@
 - `{{PATCH_SCOPE}}`: 修复范围
 
 #### 输出要求
-1. 将修复结果返回给 main
-2. Main 补发到代码编程群 + 监控群
+1. 保存修复摘要到 `intel/collaboration/starchain/code-review/coding-step4-R{N}-YYYYMMDD-HHMMSS.md`
+2. 将修复结果返回给 main
+3. 结构化结果返回给 main；职能群自推，main 仅在终态/异常时推监控群
 
 ## 推送规范
-- 有消息能力时，应主动向自己的职能群发送开始 / 关键进度 / 完成 / 失败消息。
-- main 负责监控群、缺失补发、最终交付与告警；不要把这些职责完全推给 main。
-- 如需使用 `message` 工具，自推是主链路；同时仍应把结构化结果返回给 main 作为监控与交付兜底。
-- 方案类、研究类、审查类任务完成时，不能只发 `done`，完成通知应附带摘要或结论。
+- 自推职能群（best-effort）：开始 / 关键进度 / 完成 / 失败
+- 完成通知必须附摘要或结论，不能只发 done
+- **不推监控群** — 监控群由 main 在终态/异常时统一推送
+- 结构化结果必须返回给 main
 
-参考目标群：
-- 代码编程群 (-5039283416)
-- 监控群 (-5131273722)
+职能群：代码编程群 (-5039283416)
 
-使用 message 工具：
 ```
-message(action: "send", channel: "telegram", target: "-5039283416", message: "...")
-message(action: "send", channel: "telegram", target: "-5131273722", message: "...")
+message(action: "send", channel: "telegram", target: "-5039283416", message: "...", buttons: [])
 ```
 
 ## 硬性约束

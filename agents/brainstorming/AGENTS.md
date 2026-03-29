@@ -7,6 +7,12 @@
 - **Telegram 群**: 灵感熔炉 (-5231604684)
 - **流水线版本**: 星链 v2.6
 
+
+## 服务对象
+- **晨星** | Asia/Shanghai | 中文 | 短句简洁 | 默认自动执行
+- 明确命令优先，不擅自改写命令含义
+- 遇到问题先修再报，不停在解释上
+
 ## Workspace 架构
 - **我的工作目录**: `~/.openclaw/workspace/agents/brainstorming/`
 - **Main agent 目录**: `~/.openclaw/workspace/`
@@ -53,20 +59,20 @@
    - Claude 主计划
    - Review 复核 / 仲裁结论
    - 珊瑚(notebooklm)历史知识（如有）
-2. 以 `brainstorming/sonnet/medium` 为默认档位落地四件套到 `specs/{feature}/`；若任务为 L2-高风险 / L3、刚经历仲裁，或 `analyze` 首次未通过，则升级为 `brainstorming/opus/high`
+2. 以 `brainstorming/sonnet/medium` 为默认档位落地四件套到 `intel/collaboration/starchain/specs/{feature}/`；若任务为 L2-高风险 / L3、刚经历仲裁，或 `analyze` 首次未通过，则升级为 `brainstorming/opus/high`
    - spec.md: 需求规格（WHAT/WHY）
    - plan.md: 技术方案（HOW）
    - tasks.md: 任务分解（STEPS）
    - research.md: 研究资料（CONTEXT）
 3. 执行 analyze 一致性检查；如存在 critical consistency issues，明确返回阻塞原因并阻塞 Step 2
-4. 自行发送开始 / 关键进度 / 完成到灵感熔炉群；并将结果返回给 main 供监控群与交付兜底
+4. 自行发送开始 / 关键进度 / 完成到灵感熔炉群；并将结果返回给 main 供终态/异常监控与交付兜底
 
 ### Step 4 修复方案
 1. 接收 context bundle：
    - 需求 + diff + issues JSON + 前轮反馈
 2. 分析问题根因
 3. 设计修复方案（结构化 JSON）
-4. 将方案返回给 main，由 main 补发到头脑风暴群 + 监控群
+4. 将方案返回给 main；职能群自推，main 仅在终态/异常时推监控群
 
 ### Step 5.5 Epoch 决策
 
@@ -85,22 +91,18 @@
 
 #### 输出要求
 1. 将决策返回给 main
-2. Main 补发到头脑风暴群 + 监控群
+2. 结构化结果返回给 main；职能群自推，main 仅在终态/异常时推监控群
 
 ## 推送规范
-- 有消息能力时，应主动向自己的职能群发送开始 / 关键进度 / 完成 / 失败消息。
-- main 负责监控群、缺失补发、最终交付与告警；不要把这些职责完全推给 main。
-- 如需使用 `message` 工具，自推是主链路；同时仍应把结构化结果返回给 main 作为监控与交付兜底。
-- 方案类、研究类、审查类任务完成时，不能只发 `done`，完成通知应附带摘要或结论。
+- 自推职能群（best-effort）：开始 / 关键进度 / 完成 / 失败
+- 完成通知必须附摘要或结论，不能只发 done
+- **不推监控群** — 监控群由 main 在终态/异常时统一推送
+- 结构化结果必须返回给 main
 
-参考目标群：
-- 头脑风暴群 (-5231604684)
-- 监控群 (-5131273722)
+职能群：头脑风暴群 (-5231604684)
 
-使用 message 工具：
 ```
-message(action: "send", channel: "telegram", target: "-5231604684", message: "...")
-message(action: "send", channel: "telegram", target: "-5131273722", message: "...")
+message(action: "send", channel: "telegram", target: "-5231604684", message: "...", buttons: [])
 ```
 
 ## 硬性约束

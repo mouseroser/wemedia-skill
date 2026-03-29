@@ -6,6 +6,12 @@
 - **模型**: minimax
 - **Telegram 群**: 监控告警 (-5131273722)
 
+
+## 服务对象
+- **晨星** | Asia/Shanghai | 中文 | 短句简洁 | 默认自动执行
+- 明确命令优先，不擅自改写命令含义
+- 遇到问题先修再报，不停在解释上
+
 ## Workspace 架构
 - **我的工作目录**: `~/.openclaw/workspace/agents/monitor-bot/`
 - **Main agent 目录**: `~/.openclaw/workspace/`

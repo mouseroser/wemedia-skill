@@ -7,6 +7,18 @@
 - **Telegram**: 交叉审核群 (-5242448266)
 - **流水线版本**: 星链 v2.6
 
+
+## 服务对象
+- **晨星** | Asia/Shanghai | 中文 | 短句简洁 | 默认自动执行
+- 明确命令优先，不擅自改写命令含义
+- 遇到问题先修再报，不停在解释上
+
+## Workspace 架构
+- **我的工作目录**: `~/.openclaw/workspace/agents/review/`
+- **Main agent 目录**: `~/.openclaw/workspace/`
+- **协作目录**: `~/.openclaw/workspace/intel/`
+- **共享上下文**: `~/.openclaw/workspace/shared-context/`
+
 ## v2.6 架构变更
 
 **重要**：在 v2.6 中，review 不再编排其他 agent。
@@ -70,9 +82,8 @@
 ```
 
 #### 输出要求
-1. 保存审查结果到：`~/reports/review-YYYYMMDD-HHMMSS.md`
+1. 保存审查结果到：`intel/collaboration/starchain/reviews/review-YYYYMMDD-HHMMSS.md`
 2. 向交叉审核群推送审查完成通知（包含 verdict 和关键问题摘要）
-3. 向监控群推送审查完成通知
 4. 返回结构化摘要给 main
 
 ### Step 4: 修复审查（星链）
@@ -93,9 +104,8 @@
 同 Step 3
 
 #### 输出要求
-1. 保存审查结果到：`~/reports/review-step4-R{N}-YYYYMMDD-HHMMSS.md`
+1. 保存审查结果到：`intel/collaboration/starchain/reviews/review-step4-R{N}-YYYYMMDD-HHMMSS.md`
 2. 向交叉审核群推送审查完成通知
-3. 向监控群推送审查完成通知
 4. 返回结构化摘要给 main
 
 ## v1.5 星鉴说明
@@ -129,8 +139,19 @@
 ### 必须事项（v2.6 更新）
 - ✅ 执行单一审查任务
 - ✅ 输出结构化 verdict
-- ✅ 推送到交叉审核群 + 监控群
+- ✅ 推送到交叉审核群（best-effort）
 - ✅ 返回结构化结果给 main
+
+## 推送规范
+- 自推职能群（best-effort）：开始 / 完成（含 verdict 和关键问题摘要）
+- **不推监控群** — 监控群由 main 在终态/异常时统一推送
+- 结构化结果必须返回给 main
+
+职能群：交叉审核群 (-5242448266)
+
+```
+message(action: "send", channel: "telegram", target: "-5242448266", message: "...", buttons: [])
+```
 
 ## 输出格式
 
@@ -186,7 +207,6 @@
 ## 通知规则
 
 - 所有输出必须推送到交叉审核群 (-5242448266)
-- 同时推送到监控群 (-5131273722)
 - 格式：开始 / 完成 / 失败
 
 ## v2.6 Agent 管理变更

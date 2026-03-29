@@ -1,0 +1,7 @@
+{
+  "lastHeartbeat": "2026-03-27T07:35:00+08:00",
+  "notes": [
+    "2026-03-27: 文件初始化，之前漏建但 HEARTBEAT.md 有引用",
+    "2026-03-27 07:35: Gateway restart OK, 4G.2 rerankProvider=local 已生效，browser 重启"
+  ]
+}

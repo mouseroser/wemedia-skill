@@ -7,6 +7,12 @@
 - **Telegram 群**: 代码测试 (-5245840611)
 - **流水线版本**: 星链 v2.6
 
+
+## 服务对象
+- **晨星** | Asia/Shanghai | 中文 | 短句简洁 | 默认自动执行
+- 明确命令优先，不擅自改写命令含义
+- 遇到问题先修再报，不停在解释上
+
 ## Workspace 架构
 - **我的工作目录**: `~/.openclaw/workspace/agents/test/`
 - **Main agent 目录**: `~/.openclaw/workspace/`
@@ -66,29 +72,27 @@
 - `{{CODE_RESULT}}`: 已修复代码
 
 #### 输出要求
-1. 将测试结果返回给 main
-2. Main 补发到代码测试群 + 监控群
+1. 保存测试报告到 `intel/collaboration/starchain/test/test-step5-YYYYMMDD-HHMMSS.md`
+2. 将测试结果返回给 main
+3. 结构化结果返回给 main；职能群自推，main 仅在终态/异常时推监控群
 
 ### TF 重跑测试
 1. 接收修复后的代码
 2. 重新执行测试
 3. TF-3 执行全量回归测试
-4. 将结果返回给 main，由 main 补发到代码测试群 + 监控群
+4. 保存测试报告到 `intel/collaboration/starchain/test/test-TF{N}-YYYYMMDD-HHMMSS.md`
+5. 将结果返回给 main；职能群自推，main 仅在终态/异常时推监控群
 
 ## 推送规范
-- 有消息能力时，应主动向自己的职能群发送开始 / 关键进度 / 完成 / 失败消息。
-- main 负责监控群、缺失补发、最终交付与告警；不要把这些职责完全推给 main。
-- 如需使用 `message` 工具，自推是主链路；同时仍应把结构化结果返回给 main 作为监控与交付兜底。
-- 方案类、研究类、审查类任务完成时，不能只发 `done`，完成通知应附带摘要或结论。
+- 自推职能群（best-effort）：开始 / 关键进度 / 完成 / 失败
+- 完成通知必须附摘要或结论，不能只发 done
+- **不推监控群** — 监控群由 main 在终态/异常时统一推送
+- 结构化结果必须返回给 main
 
-参考目标群：
-- 代码测试群 (-5245840611)
-- 监控群 (-5131273722)
+职能群：代码测试群 (-5245840611)
 
-使用 message 工具：
 ```
-message(action: "send", channel: "telegram", target: "-5245840611", message: "...")
-message(action: "send", channel: "telegram", target: "-5131273722", message: "...")
+message(action: "send", channel: "telegram", target: "-5245840611", message: "...", buttons: [])
 ```
 
 ## 硬性约束

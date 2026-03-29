@@ -7,6 +7,12 @@
 - **Telegram 群**: 项目文档 (-5095976145)
 - **流水线版本**: 星链 v2.6
 
+
+## 服务对象
+- **晨星** | Asia/Shanghai | 中文 | 短句简洁 | 默认自动执行
+- 明确命令优先，不擅自改写命令含义
+- 遇到问题先修再报，不停在解释上
+
 ## Workspace 架构
 - **我的工作目录**: `~/.openclaw/workspace/agents/docs/`
 - **Main agent 目录**: `~/.openclaw/workspace/`
@@ -33,7 +39,7 @@
 - **Step 6**: 报告定稿 / 交付整理
   - docs/minimax/medium
   - 统一标题、结论、推荐路线、风险、报告路径、下一步建议
-  - 输出到：`reports/*-final-report-*.md`
+  - 输出到：`intel/collaboration/starchain/docs/final-report-*.md`
 - **v1.5 优化**: 
   - Constitution-First 完整化
   - NotebookLM 补料（S/D 级）
@@ -45,12 +51,12 @@
 
 ### Step 6 文档生成
 1. 接收输入：
-   - 最终宪法 / 已批准计划：`~/.openclaw/workspace/agents/openai/` + `~/.openclaw/workspace/agents/claude/`
-   - `tasks.md`：`~/.openclaw/workspace/agents/brainstorming/specs/{feature}/tasks.md`
-   - 织梦(gemini)大纲：`~/.openclaw/workspace/agents/gemini/reports/step-6-outline.md`
-   - 代码 diff：`~/.openclaw/workspace/agents/coding/`
-   - 审查摘要：`~/.openclaw/workspace/agents/review/`
-   - 珊瑚(notebooklm)文档模板（如有）：`~/.openclaw/workspace/agents/notebooklm/reports/step-6-template.md`
+   - 最终宪法 / 已批准计划：`intel/collaboration/starchain/constitution/` + `intel/collaboration/starchain/plans/`
+   - `tasks.md`：`intel/collaboration/starchain/specs/{feature}/tasks.md`
+   - 织梦(gemini)大纲：`intel/collaboration/starchain/docs/step-6-outline.md`
+   - 代码 diff：`intel/collaboration/starchain/code-review/`
+   - 审查摘要：`intel/collaboration/starchain/reviews/`
+   - 珊瑚(notebooklm)文档模板（如有）：`intel/collaboration/starchain/docs/step-6-template.md`
 2. 先判断是否存在公开文档影响：
    - 无公开文档影响 → 默认仅生成 `变更日志` / `delivery note` / FAQ 摘要
    - 有公开文档影响 → 进入完整文档生成
@@ -60,22 +66,18 @@
    - 使用指南
    - 变更日志
 4. 文档产出到我的工作目录
-5. 将文档返回给 main，由 main 补发到项目文档群 + 监控群
+5. 将文档返回给 main；职能群自推，main 仅在终态/异常时推监控群
 
 ## 推送规范
-- 有消息能力时，应主动向自己的职能群发送开始 / 关键进度 / 完成 / 失败消息。
-- main 负责监控群、缺失补发、最终交付与告警；不要把这些职责完全推给 main。
-- 如需使用 `message` 工具，自推是主链路；同时仍应把结构化结果返回给 main 作为监控与交付兜底。
-- 方案类、研究类、审查类任务完成时，不能只发 `done`，完成通知应附带摘要或结论。
+- 自推职能群（best-effort）：开始 / 关键进度 / 完成 / 失败
+- 完成通知必须附摘要或结论，不能只发 done
+- **不推监控群** — 监控群由 main 在终态/异常时统一推送
+- 结构化结果必须返回给 main
 
-参考目标群：
-- 项目文档群 (-5095976145)
-- 监控群 (-5131273722)
+职能群：项目文档群 (-5095976145)
 
-使用 message 工具：
 ```
-message(action: "send", channel: "telegram", target: "-5095976145", message: "...")
-message(action: "send", channel: "telegram", target: "-5131273722", message: "...")
+message(action: "send", channel: "telegram", target: "-5095976145", message: "...", buttons: [])
 ```
 
 ## 硬性约束

@@ -5,15 +5,16 @@
 
 ## 核心文档
 
-| 文件 | 路径 |
-|------|------|
-| AGENTS.md | `~/.openclaw/workspace/AGENTS.md` |
-| MEMORY.md | `~/.openclaw/workspace/MEMORY.md` |
-| SOUL.md | `~/.openclaw/workspace/SOUL.md` |
-| USER.md | `~/.openclaw/workspace/USER.md` |
-| THESIS.md | `~/.openclaw/workspace/shared-context/THESIS.md` |
-| FEEDBACK-LOG.md | `~/.openclaw/workspace/shared-context/FEEDBACK-LOG.md` |
-| PATHS.md | `~/.openclaw/workspace/shared-context/PATHS.md` |
+| 文件 | 路径 | 说明 |
+|------|------|------|
+| AGENTS.md | `~/.openclaw/workspace/AGENTS.md` | main 执行手册 |
+| MEMORY.md | `~/.openclaw/workspace/MEMORY.md` | 长期伤疤与护栏 |
+| SOUL.md | `~/.openclaw/workspace/SOUL.md` | 人格与边界 |
+| USER.md | `~/.openclaw/workspace/USER.md` | 服务对象（main 专用） |
+| THESIS.md | `~/.openclaw/workspace/shared-context/THESIS.md` | 当前世界观 |
+| FEEDBACK-LOG.md | `~/.openclaw/workspace/shared-context/FEEDBACK-LOG.md` | 跨 agent 纠偏账本 |
+| SIGNALS.md | `~/.openclaw/workspace/shared-context/SIGNALS.md` | 外部信号池 |
+| PATHS.md | `~/.openclaw/workspace/shared-context/PATHS.md` | 路径索引 |
 | CRON-MATRIX.md | `~/.openclaw/workspace/shared-context/CRON-MATRIX.md` |
 
 ## 配置
@@ -86,12 +87,18 @@
 
 | 目录 | 负责 agent | 说明 |
 |------|-----------|------|
-| `intel/collaboration/starchain/specs/` | claude, openai, brainstorming | 宪法、计划、Spec-Kit、代码产出 |
-| `intel/collaboration/starchain/reviews/` | gemini, claude | 扫描、一致性复核、Step3 双审报告 |
+| `intel/collaboration/starchain/scans/` | gemini | 扫描结果 |
+| `intel/collaboration/starchain/constitution/` | openai | 宪法 |
+| `intel/collaboration/starchain/plans/` | claude | 计划 |
+| `intel/collaboration/starchain/specs/` | brainstorming | Spec-Kit 四件套 |
+| `intel/collaboration/starchain/code-review/` | coding | 修改摘要 |
+| `intel/collaboration/starchain/pre-review/` | gemini | 预审 |
+| `intel/collaboration/starchain/reviews/` | review, gemini, claude | 审查报告 |
 | `intel/collaboration/starchain/arbitration/` | openai, claude | 仲裁结论 |
 | `intel/collaboration/starchain/research/` | notebooklm | 历史经验调研 |
 | `intel/collaboration/starchain/test/` | test | 测试报告 |
 | `intel/collaboration/starchain/docs/` | docs | 交付文档 |
+| `intel/collaboration/starchain/diagnosis/` | gemini | 诊断 memo |
 
 > **读取规则**：消费者 agent 到对应目录读取，不在自己目录存星链产物。
 
