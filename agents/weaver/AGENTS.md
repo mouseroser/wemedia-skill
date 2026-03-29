@@ -75,7 +75,7 @@ sessions_yield(message="等待 gemini 2D")
 #### Step 3：下发创作给 wemedia
 ```
 sessions_spawn(agentId="wemedia", mode="run",
-  task="开始创作 [{内容ID}]\n宪法简报：{简报}\n来源URL：{url}\n草稿写完后保存至：/Users/lucifinil_chen/.openclaw/workspace/intel/collaboration/media/wemedia/drafts/A/{内容ID}.txt\n完成后 sessions_send(sessionKey=\'agent:weaver:subagent:{织梭sessionKey}\', message=\'Step3完成 草稿路径:/Users/lucifinil_chen/.openclaw/workspace/intel/collaboration/media/wemedia/drafts/A/{内容ID}.txt\')")
+  task="开始创作 [{内容ID}]\n宪法简报：{简报}\n来源URL：{url}\n\n输出规格（一次性产出）：\n1. 主稿（完整正文，400-600字四段结构）\n2. 标题备选（3-5个，不同风格）\n3. 开头钩子版本（3个：悬念型/痛点型/数据型）\n4. 封面提示词（供 notebooklm 生图用）\n5. 标签建议（≤10个）\n6. CTA备选（2个）\n7. 复用建议（适合拆成哪些平台版本）\n\n草稿保存至：/Users/lucifinil_chen/.openclaw/workspace/intel/collaboration/media/wemedia/drafts/A/{内容ID}.txt\n完成后 sessions_send(sessionKey=\'agent:weaver:subagent:{织梭sessionKey}\', message=\'Step3完成 草稿路径:/Users/lucifinil_chen/.openclaw/workspace/intel/collaboration/media/wemedia/drafts/A/{内容ID}.txt\')")
 sessions_yield(message="等待 wemedia 草稿")
 ```
 
@@ -91,7 +91,7 @@ sessions_yield(message="等待 gemini 审查")
 #### Step 5：配图（notebooklm）
 ```
 sessions_spawn(agentId="notebooklm", mode="run",
-  task="为小红书生成配图 [{内容ID}]\n封面提示词：{提示词}\n要求：1:1方图（--orientation square），语言 zh_Hans，创建临时notebook用完即删。\n配图保存至：/Users/lucifinil_chen/.openclaw/workspace/intel/collaboration/media/wemedia/images/{内容ID}-cover.png\n完成后 sessions_send(sessionKey=\'agent:weaver:subagent:{织梭sessionKey}\', message=\'Step5完成 配图路径:/Users/lucifinil_chen/.openclaw/workspace/intel/collaboration/media/wemedia/images/{内容ID}-cover.png\')")
+  task="为小红书生成配图 [{内容ID}]\n封面提示词：{提示词}\n\n执行步骤（严格按顺序）：\n1. notebooklm create \"temp-{内容ID}-$(date +%s)\"\n2. notebooklm use <id>\n3. 把封面提示词写入 /tmp/{内容ID}_source.md，执行 notebooklm source add /tmp/{内容ID}_source.md\n4. notebooklm language set zh_Hans\n5. notebooklm generate infographic --orientation square --style bento-grid --language zh_Hans --detail detailed --wait \"封面提示词\"\n6. cd /Users/lucifinil_chen/.openclaw/workspace/intel/collaboration/media/wemedia/images && notebooklm download infographic {内容ID}-cover.png --force\n7. notebooklm use <id> && notebooklm delete -y\n\n配图保存至：/Users/lucifinil_chen/.openclaw/workspace/intel/collaboration/media/wemedia/images/{内容ID}-cover.png\n完成后 sessions_send(sessionKey=\'agent:weaver:subagent:{织梭sessionKey}\', message=\'Step5完成 配图路径:/Users/lucifinil_chen/.openclaw/workspace/intel/collaboration/media/wemedia/images/{内容ID}-cover.png\')")
 sessions_yield(message="等待配图")
 ```
 
