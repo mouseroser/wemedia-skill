@@ -106,7 +106,21 @@ sessions_spawn(agentId="gemini", mode="run", thinking="high",
   完成后推送结果到织梦群 (-5264626153)，并 announce 结果给 wemedia。")
 ```
 
-**S级可跳过 Step 2**（直接进 Step 3，用简化宪法边界）。
+**S级与M级在 Step 2 的分工**：
+
+| 子步骤 | M级 | S级 | 理由 |
+|---|---|---|---|
+| 2A 颗粒度对齐 | ✅ spawn gemini | ✅ spawn gemini | 方向不对后面全错，不可省 |
+| 2B 宪法边界 | ✅ spawn openai | ✅ spawn openai | 质量底线，没有安全网不发 |
+| 2C 内容计划 | ✅ spawn claude | ❌ 跳过 | S级选题成熟，叙事结构 wemedia 自己拿捏 |
+| 2D 一致性复核 | ✅ spawn gemini | ❌ 跳过 | 只有 2A+2B 时无需额外对齐 |
+
+**S级使用条件（必须同时满足）**：
+1. 同类选题已发过至少 2 条，有成熟范本可复用
+2. 无新风险点、无敏感边界
+3. 叙事结构固化（如工具测评、数据解读等固定体裁）
+
+> S级不是「省事」，而是「在已验证的轨道上复用」。未满足上述条件的选题，一律升级为M级走完整链路。
 
 ### Step 4：审查（wemedia spawn gemini）
 
